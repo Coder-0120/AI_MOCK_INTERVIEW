@@ -1,0 +1,111 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+body {
+  margin: 0;
+  font-family: 'DM Sans', sans-serif;
+  background: #060910;
+  color: #fff;
+}
+
+/* CONTAINER */
+.auth-container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* BACKGROUND GLOW */
+.bg-glow {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(0,229,255,0.15), transparent 70%);
+  top: -100px;
+  left: -100px;
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,100% { transform: translate(0,0); }
+  50% { transform: translate(40px,40px); }
+}
+
+/* AUTH BOX */
+.auth-box {
+  position: relative;
+  z-index: 2;
+  background: rgba(255,255,255,0.03);
+  padding: 40px 30px;
+  width: 320px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(14px);
+  text-align: center;
+  box-shadow: 0 0 40px rgba(0,229,255,0.08);
+}
+
+/* HEADINGS */
+.auth-box h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.8rem;
+  margin-bottom: 8px;
+}
+
+.sub {
+  font-size: 0.85rem;
+  color: #9ca3b8;
+  margin-bottom: 25px;
+}
+
+/* INPUTS */
+.auth-box input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: #0b1018;
+  color: white;
+  outline: none;
+  transition: 0.3s;
+}
+
+.auth-box input:focus {
+  border-color: #00e5ff;
+  box-shadow: 0 0 12px rgba(0,229,255,0.3);
+}
+
+/* BUTTON */
+.auth-box button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 15px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 700;
+  font-family: 'Syne', sans-serif;
+  background: linear-gradient(135deg, #00e5ff, #7b5cfa);
+  color: white;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.auth-box button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px rgba(0,229,255,0.4);
+}
+
+/* SWITCH TEXT */
+.switch {
+  margin-top: 15px;
+  font-size: 0.8rem;
+  color: #6b7a96;
+}
+
+.switch a {
+  color: #00e5ff;
+  text-decoration: none;
+}
