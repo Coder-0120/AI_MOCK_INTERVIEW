@@ -76,7 +76,7 @@ function Cursor() {
   return(<><div ref={dotRef} className="cur-dot"/><div ref={ringRef} className="cur-ring"/></>);
 }
 
-/* ─── COUNT-UP HOOK (triggers on scroll into view) ─── */
+/* ─── COUNT-UP HOOK ─── */
 function useCountUp(target,duration=1500,decimals=0){
   const [val,setVal]=useState(0);
   const [go,setGo]=useState(false);
@@ -107,7 +107,7 @@ function useReveal(threshold=0.12){
   return [ref,vis];
 }
 
-/* ─── STAT ITEM with scroll-triggered count-up ─── */
+/* ─── STAT ITEM ─── */
 function StatItem({target,suffix,label,decimals=0,delay=0}){
   const [val,start]=useCountUp(target,1500,decimals);
   const [ref,vis]=useReveal(.3);
@@ -140,23 +140,35 @@ function RV({children,delay=0,dir="up"}){
 /* ─── MARQUEE ─── */
 const MQ=["AI Evaluation","Emotion Detection","Voice Analysis","Role-Based Questions","Real-Time Feedback","Performance Reports","NLP Powered","Adaptive AI"];
 
-/* ─── STEP CARD ─── */
-function StepCard({num,icon,title,desc,delay}){
+/* ─── STEP CARD — redesigned ─── */
+function StepCard({num,icon,title,desc,delay,accent}){
   const [ref,vis]=useReveal();
   return(
-    <div ref={ref} className="step-card" style={{opacity:vis?1:0,transform:vis?"translateY(0)":"translateY(36px)",transition:`opacity .6s ${delay}ms, transform .6s ${delay}ms cubic-bezier(.4,0,.2,1)`}}>
-      <div className="step-num">{num}</div>
-      <div className="step-ico">{icon}</div>
-      <h3>{title}</h3>
-      <p>{desc}</p>
+    <div ref={ref} className="step-card" style={{
+      opacity:vis?1:0,
+      transform:vis?"translateY(0)":"translateY(36px)",
+      transition:`opacity .6s ${delay}ms, transform .6s ${delay}ms cubic-bezier(.4,0,.2,1)`,
+      '--accent': accent
+    }}>
+      <div className="step-card-inner">
+        <div className="step-header">
+          <div className="step-ico-wrap">
+            <div className="step-ico">{icon}</div>
+          </div>
+          <div className="step-num">{num}</div>
+        </div>
+        <h3>{title}</h3>
+        <p>{desc}</p>
+        <div className="step-bar"/>
+      </div>
     </div>
   );
 }
 
-/* ─── FEAT CARD ─── */
-function FeatCard({icon,title,desc,tag,tc}){
+/* ─── FEAT CARD — redesigned ─── */
+function FeatCard({icon,title,desc,tag,tc,accent}){
   return(
-    <div className="feat-card">
+    <div className="feat-card" style={{'--faccent': accent}}>
       <div className="feat-ico">{icon}</div>
       <h3>{title}</h3>
       <p>{desc}</p>
@@ -257,7 +269,6 @@ export default function LandingPage(){
             <button className="bf" onClick={()=>go("cta")}>🎤 Start Mock Interview</button>
             <button className="bg" onClick={()=>go("demo")}>▶ Watch Demo</button>
           </div>
-          {/* Stats box — numbers animate when scrolled into view */}
           <div className="hstats">
             <StatItem target={50}  suffix="K+" label="Interviews Done"  delay={0}/>
             <StatItem target={89}  suffix="%" label="Placement Rate"   delay={140}/>
@@ -280,14 +291,16 @@ export default function LandingPage(){
       {/* HOW IT WORKS */}
       <section id="how">
         <div className="wrap">
-          <RV><span className="slb">Process</span></RV>
-          <RV delay={60}><h2 className="st">How InterviewAI Works</h2></RV>
-          <RV delay={120}><p className="ss">Four intelligent layers running in real-time to give you the most realistic interview simulation possible.</p></RV>
+          <div className="section-head">
+            <RV><span className="slb">Process</span></RV>
+            <RV delay={60}><h2 className="st">How InterviewAI Works</h2></RV>
+            <RV delay={120}><p className="ss">Four intelligent layers running in real-time to give you the most realistic interview simulation possible.</p></RV>
+          </div>
           <div className="steps">
-            <StepCard num="01" icon="🎯" title="Choose Your Role" desc="Pick SDE, HR, Product Manager, Data Science and more. Every question is tailored to your exact target job." delay={40}/>
-            <StepCard num="02" icon="🤖" title="AI Interviews You" desc="Dynamic adaptive questions that evolve with your responses. Harder follow-ups when you excel, supportive probes when you struggle." delay={120}/>
-            <StepCard num="03" icon="🔬" title="Multi-Layer Analysis" desc="Simultaneously analyzes what you say via NLP, how you say it via voice AI, and how you look via facial expression detection." delay={200}/>
-            <StepCard num="04" icon="📊" title="Detailed Report" desc="A comprehensive PDF with scores, weakness identification, and a personalized step-by-step improvement roadmap." delay={280}/>
+            <StepCard num="01" icon="🎯" title="Choose Your Role" desc="Pick SDE, HR, Product Manager, Data Science and more. Every question is tailored to your exact target job." delay={40} accent="#00e5ff"/>
+            <StepCard num="02" icon="🤖" title="AI Interviews You" desc="Dynamic adaptive questions that evolve with your responses. Harder follow-ups when you excel, supportive probes when you struggle." delay={120} accent="#7b5cfa"/>
+            <StepCard num="03" icon="🔬" title="Multi-Layer Analysis" desc="Simultaneously analyzes what you say via NLP, how you say it via voice AI, and how you look via facial expression detection." delay={200} accent="#4ade80"/>
+            <StepCard num="04" icon="📊" title="Detailed Report" desc="A comprehensive PDF with scores, weakness identification, and a personalized step-by-step improvement roadmap." delay={280} accent="#f5c842"/>
           </div>
         </div>
       </section>
@@ -295,17 +308,19 @@ export default function LandingPage(){
       {/* FEATURES */}
       <section id="features">
         <div className="wrap">
-          <RV><span className="slb">Capabilities</span></RV>
-          <RV delay={60}><h2 className="st">Everything You Need to Succeed</h2></RV>
-          <RV delay={120}><p className="ss">From answer quality to confidence signals — we evaluate the complete picture of your performance.</p></RV>
+          <div className="section-head">
+            <RV><span className="slb">Capabilities</span></RV>
+            <RV delay={60}><h2 className="st">Everything You Need to Succeed</h2></RV>
+            <RV delay={120}><p className="ss">From answer quality to confidence signals — we evaluate the complete picture of your performance.</p></RV>
+          </div>
           <RV delay={180}>
             <div className="fg">
-              <FeatCard icon="🧠" title="Answer Intelligence" desc="NLP engine scores your answers on relevance, structure, clarity, and depth. Suggests stronger examples and better phrasing." tag="NLP" tc="tc"/>
-              <FeatCard icon="😀" title="Emotion Detection" desc="Real-time webcam analysis detects confidence, anxiety, confusion, and engagement levels throughout your session." tag="Computer Vision" tc="tv"/>
-              <FeatCard icon="🎙️" title="Voice Confidence" desc="Detects filler words, speaking pace, hesitation pauses, and vocal tone to give you an accurate confidence score." tag="Audio AI" tc="tr"/>
-              <FeatCard icon="🎤" title="Dynamic Questions" desc="Industry-relevant questions generated in real-time, adapting difficulty and focus based on how you answered before." tag="Adaptive AI" tc="tc"/>
-              <FeatCard icon="📈" title="Performance Dashboard" desc="Visual breakdown of overall score, communication strengths, technical gaps, and a clear improvement roadmap." tag="Analytics" tc="tg"/>
-              <FeatCard icon="🔁" title="Progress Tracking" desc="Track growth across sessions and see exactly how your confidence, clarity, and technical depth improve over time." tag="Growth" tc="tv"/>
+              <FeatCard icon="🧠" title="Answer Intelligence" desc="NLP engine scores your answers on relevance, structure, clarity, and depth. Suggests stronger examples and better phrasing." tag="NLP" tc="tc" accent="#00e5ff"/>
+              <FeatCard icon="😀" title="Emotion Detection" desc="Real-time webcam analysis detects confidence, anxiety, confusion, and engagement levels throughout your session." tag="Computer Vision" tc="tv" accent="#7b5cfa"/>
+              <FeatCard icon="🎙️" title="Voice Confidence" desc="Detects filler words, speaking pace, hesitation pauses, and vocal tone to give you an accurate confidence score." tag="Audio AI" tc="tr" accent="#ff6b6b"/>
+              <FeatCard icon="🎤" title="Dynamic Questions" desc="Industry-relevant questions generated in real-time, adapting difficulty and focus based on how you answered before." tag="Adaptive AI" tc="tc" accent="#00e5ff"/>
+              <FeatCard icon="📈" title="Performance Dashboard" desc="Visual breakdown of overall score, communication strengths, technical gaps, and a clear improvement roadmap." tag="Analytics" tc="tg" accent="#4ade80"/>
+              <FeatCard icon="🔁" title="Progress Tracking" desc="Track growth across sessions and see exactly how your confidence, clarity, and technical depth improve over time." tag="Growth" tc="tv" accent="#7b5cfa"/>
             </div>
           </RV>
         </div>
@@ -368,9 +383,11 @@ export default function LandingPage(){
       {/* TESTIMONIALS */}
       <section id="testi">
         <div className="wrap">
-          <RV><span className="slb">Testimonials</span></RV>
-          <RV delay={60}><h2 className="st">Students Who Landed the Job</h2></RV>
-          <RV delay={120}><p className="ss">Real stories from users who transformed their interview performance with InterviewAI.</p></RV>
+          <div className="section-head">
+            <RV><span className="slb">Testimonials</span></RV>
+            <RV delay={60}><h2 className="st">Students Who Landed the Job</h2></RV>
+            <RV delay={120}><p className="ss">Real stories from users who transformed their interview performance with InterviewAI.</p></RV>
+          </div>
           <div className="tg2">
             <TestiCard stars={5} text="After three sessions I could see my filler word count drop from 28 to 6. The emotion feedback was eye-opening — I had no idea I looked so anxious on camera." name="Riya Kapoor" role="SDE at Flipkart" av="a1" initials="RK" delay={40}/>
             <TestiCard stars={5} text="The role-based questions were spot-on. It asked almost exactly what came up in my actual Google interview. The AI helped me structure perfect STAR answers." name="Arjun Verma" role="Product Manager at Google" av="a2" initials="AV" delay={120}/>
@@ -438,7 +455,11 @@ body.cur-hov .cur-ring{width:50px;height:50px;border-color:var(--v)}
 
 /* LAYOUT */
 section,nav,footer{position:relative;z-index:1}
-.wrap{max-width:860px;margin:0 auto;padding:0 clamp(20px,5vw,48px)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 clamp(20px,5vw,48px)}
+
+/* SECTION HEAD — centered block */
+.section-head{text-align:center;margin-bottom:56px}
+.section-head .ss{margin:0 auto}
 
 /* NAV */
 .nav{position:fixed;top:0;left:0;right:0;z-index:500;padding:0 clamp(16px,4vw,40px);transition:background .35s,border-color .35s}
@@ -469,16 +490,29 @@ section,nav,footer{position:relative;z-index:1}
 
 /* HERO */
 #hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:120px clamp(20px,5vw,48px) 80px;position:relative}
-.hi{max-width:700px;margin:0 auto}
+.hi{max-width:720px;margin:0 auto}
 
 .chip{display:inline-flex;align-items:center;gap:8px;background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.2);border-radius:100px;padding:7px 22px;font-size:.72rem;font-weight:600;color:var(--c);letter-spacing:.1em;text-transform:uppercase;margin-bottom:34px;animation:fu .7s .1s both}
 .cdot{width:6px;height:6px;border-radius:50%;background:var(--c);box-shadow:0 0 8px var(--c);animation:pp 1.5s infinite;flex-shrink:0}
 @keyframes fu{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
 
-h1.hh{font-family:var(--head);font-size:clamp(2.6rem,6.5vw,5rem);font-weight:800;line-height:1.04;letter-spacing:-.045em;margin-bottom:24px;animation:fu .7s .22s both}
+h1.hh{
+  font-family:var(--head);
+  font-size:clamp(2.8rem,6.5vw,5.2rem);
+  font-weight:800;
+  line-height:1.06;
+  letter-spacing:-.045em;
+  margin-bottom:24px;
+  animation:fu .7s .22s both;
+  /* Force two-line break */
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+}
 .gt{background:linear-gradient(130deg,var(--c) 0%,var(--v) 55%,var(--r) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:block;filter:drop-shadow(0 0 40px rgba(0,229,255,.22))}
 
-.hd{font-size:clamp(.93rem,1.8vw,1.08rem);color:var(--soft);max-width:520px;margin:0 auto 40px;font-weight:400;line-height:1.82;animation:fu .7s .36s both}
+.hd{font-size:clamp(.93rem,1.8vw,1.08rem);color:var(--soft);max-width:540px;margin:0 auto 40px;font-weight:400;line-height:1.82;animation:fu .7s .36s both}
 
 .hbtns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;animation:fu .7s .5s both}
 .bf{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--c),var(--v));color:#fff;font-family:var(--head);font-weight:700;font-size:.94rem;padding:14px 34px;border-radius:14px;box-shadow:0 0 30px rgba(0,229,255,.22),0 8px 24px rgba(123,92,250,.18);transition:transform .22s,box-shadow .22s;letter-spacing:.01em;cursor:pointer;border:none}
@@ -486,7 +520,7 @@ h1.hh{font-family:var(--head);font-size:clamp(2.6rem,6.5vw,5rem);font-weight:800
 .bg{display:inline-flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.14);color:var(--txt);font-family:var(--head);font-weight:600;font-size:.94rem;padding:14px 34px;border-radius:14px;backdrop-filter:blur(8px);transition:border-color .22s,background .22s,transform .22s;cursor:pointer;background:transparent}
 .bg:hover{border-color:rgba(0,229,255,.4);background:rgba(0,229,255,.06);transform:translateY(-3px)}
 
-/* STATS (scroll-triggered count-up) */
+/* STATS */
 .hstats{display:flex;justify-content:center;gap:clamp(20px,5vw,56px);flex-wrap:wrap;
   margin:60px auto 0;padding:28px clamp(18px,4vw,40px);max-width:580px;
   background:rgba(255,255,255,.024);border:1px solid var(--border);
@@ -513,36 +547,230 @@ h1.hh{font-family:var(--head);font-size:clamp(2.6rem,6.5vw,5rem);font-weight:800
 @keyframes mr{to{transform:translateX(-50%)}}
 
 /* SECTION COMMON */
-section{padding:clamp(68px,10vw,116px) 0}
+section{padding:clamp(80px,11vw,130px) 0}
 .slb{display:inline-block;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--c);font-weight:600;margin-bottom:13px}
 .st{font-family:var(--head);font-size:clamp(1.75rem,3.8vw,2.8rem);font-weight:800;letter-spacing:-.035em;line-height:1.1;margin-bottom:16px}
-.ss{font-size:.97rem;color:var(--soft);max-width:480px;line-height:1.78}
+.ss{font-size:.97rem;color:var(--soft);max-width:520px;line-height:1.78}
 
-/* HOW IT WORKS */
+/* ──────────────────────────────────────────
+   HOW IT WORKS — redesigned step cards
+────────────────────────────────────────── */
 #how{background:var(--bg2)}
-.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin-top:52px}
-.step-card{background:var(--bg3);border:1px solid var(--border);border-radius:18px;padding:30px 24px;position:relative;overflow:hidden;transition:transform .24s,border-color .24s,box-shadow .24s}
-.step-card::after{content:'';position:absolute;inset:0;border-radius:18px;background:linear-gradient(135deg,rgba(0,229,255,.05),transparent);opacity:0;transition:opacity .24s}
-.step-card:hover{transform:translateY(-8px);border-color:rgba(0,229,255,.3);box-shadow:0 0 36px rgba(0,229,255,.1)}
-.step-card:hover::after{opacity:1}
-.step-num{font-family:var(--head);font-size:2.8rem;font-weight:800;color:rgba(0,229,255,.06);line-height:1;margin-bottom:14px;transition:color .24s}
-.step-card:hover .step-num{color:rgba(0,229,255,.16)}
-.step-ico{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:16px;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.16)}
-.step-card h3{font-family:var(--head);font-weight:700;font-size:.97rem;margin-bottom:8px;letter-spacing:-.01em}
-.step-card p{font-size:.83rem;color:var(--muted);line-height:1.66}
 
-/* FEATURES */
+.steps{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:0;
+  position:relative;
+}
+
+/* Connector line between cards */
+.steps::before{
+  content:'';
+  position:absolute;
+  top:52px;
+  left:calc(12.5% + 22px);
+  right:calc(12.5% + 22px);
+  height:1px;
+  background:linear-gradient(90deg,rgba(0,229,255,.3),rgba(123,92,250,.3),rgba(74,222,128,.3),rgba(245,200,66,.3));
+  z-index:0;
+  pointer-events:none;
+}
+
+.step-card{
+  background:transparent;
+  border:none;
+  border-radius:0;
+  padding:0 24px 0;
+  position:relative;
+  overflow:visible;
+  text-align:center;
+  transition:none;
+}
+
+.step-card::after{display:none}
+.step-card:hover{transform:none;border-color:transparent;box-shadow:none}
+.step-card:hover::after{opacity:0}
+
+/* Inner card box — the actual styled card */
+.step-card-inner{
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:28px 22px 26px;
+  height:100%;
+  position:relative;
+  overflow:hidden;
+  transition:transform .28s cubic-bezier(.34,1.2,.64,1), border-color .28s, box-shadow .28s;
+}
+.step-card:hover .step-card-inner{
+  transform:translateY(-10px);
+  border-color:var(--accent,var(--c));
+  box-shadow:0 20px 60px rgba(0,0,0,.4), 0 0 0 1px var(--accent,var(--c)) inset;
+}
+
+/* Gradient glow behind icon */
+.step-card-inner::before{
+  content:'';
+  position:absolute;
+  top:-30px;left:50%;transform:translateX(-50%);
+  width:100px;height:100px;
+  background:radial-gradient(circle,var(--accent,var(--c)) 0%,transparent 70%);
+  opacity:.08;
+  transition:opacity .28s;
+}
+.step-card:hover .step-card-inner::before{opacity:.22}
+
+.step-header{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:0;
+  margin-bottom:18px;
+}
+
+/* Circle icon with accent ring */
+.step-ico-wrap{
+  position:relative;
+  z-index:1;
+  margin-bottom:12px;
+}
+.step-ico{
+  width:52px;height:52px;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;
+  background:var(--bg2);
+  border:2px solid var(--accent,rgba(0,229,255,.3));
+  box-shadow:0 0 0 5px rgba(0,229,255,.05);
+  transition:box-shadow .28s, border-color .28s;
+}
+.step-card:hover .step-ico{
+  box-shadow:0 0 0 8px rgba(0,229,255,.1), 0 0 20px var(--accent,var(--c));
+}
+
+.step-num{
+  font-family:var(--head);
+  font-size:.72rem;
+  font-weight:700;
+  letter-spacing:.12em;
+  color:var(--accent,var(--c));
+  opacity:.6;
+  text-transform:uppercase;
+}
+.step-card h3{font-family:var(--head);font-weight:700;font-size:1rem;margin-bottom:10px;letter-spacing:-.01em;color:var(--txt)}
+.step-card p{font-size:.82rem;color:var(--muted);line-height:1.7}
+
+/* Bottom accent bar */
+.step-bar{
+  position:absolute;
+  bottom:0;left:0;right:0;
+  height:2px;
+  background:linear-gradient(90deg,var(--accent,var(--c)),transparent);
+  opacity:0;
+  transition:opacity .28s;
+}
+.step-card:hover .step-bar{opacity:1}
+
+/* Connection dots on line */
+.step-card::before{
+  content:'';
+  position:absolute;
+  top:48px;
+  left:50%;
+  transform:translateX(-50%);
+  width:9px;height:9px;
+  border-radius:50%;
+  background:var(--accent,var(--c));
+  box-shadow:0 0 10px var(--accent,var(--c));
+  z-index:2;
+  pointer-events:none;
+}
+
+@media(max-width:820px){
+  .steps{grid-template-columns:repeat(2,1fr);gap:16px}
+  .steps::before{display:none}
+  .step-card::before{display:none}
+  .step-card{padding:0}
+}
+@media(max-width:520px){
+  .steps{grid-template-columns:1fr;gap:14px}
+}
+
+/* ──────────────────────────────────────────
+   FEATURES — redesigned grid
+────────────────────────────────────────── */
 #features{background:var(--bg)}
-.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1px;margin-top:52px;background:var(--border);border:1px solid var(--border);border-radius:22px;overflow:hidden}
-.feat-card{background:var(--bg2);padding:34px 28px;position:relative;overflow:hidden;transition:background .24s}
-.feat-card:hover{background:var(--bg3)}
-.feat-card::before{content:'';position:absolute;bottom:0;left:0;height:2px;width:0;background:linear-gradient(90deg,var(--c),var(--v));transition:width .34s}
-.feat-card:hover::before{width:100%}
-.feat-ico{width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:1.38rem;margin-bottom:18px;background:linear-gradient(135deg,rgba(0,229,255,.08),rgba(123,92,250,.08));border:1px solid rgba(0,229,255,.11)}
-.feat-card h3{font-family:var(--head);font-weight:700;font-size:.97rem;margin-bottom:9px;letter-spacing:-.01em}
-.feat-card p{font-size:.83rem;color:var(--muted);line-height:1.66}
-.ftag{display:inline-block;margin-top:13px;font-size:.65rem;letter-spacing:.07em;text-transform:uppercase;padding:3px 10px;border-radius:100px;font-weight:600}
-.tc{background:rgba(0,229,255,.09);color:var(--c)}.tv{background:rgba(123,92,250,.1);color:#a78bfa}.tr{background:rgba(255,107,107,.09);color:#ff6b6b}.tg{background:rgba(245,200,66,.09);color:var(--gold)}
+
+.fg{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+  margin-top:0;
+  background:transparent;
+  border:none;
+  border-radius:0;
+  overflow:visible;
+}
+
+.feat-card{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:32px 26px;
+  position:relative;
+  overflow:hidden;
+  transition:transform .26s cubic-bezier(.34,1.2,.64,1), border-color .26s, box-shadow .26s, background .26s;
+}
+
+.feat-card:hover{
+  transform:translateY(-8px);
+  background:var(--bg3);
+  border-color:var(--faccent,rgba(0,229,255,.4));
+  box-shadow:0 20px 60px rgba(0,0,0,.35), 0 0 30px rgba(0,229,255,.06);
+}
+
+/* Top accent stripe */
+.feat-card::after{
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;
+  height:2px;
+  background:linear-gradient(90deg,var(--faccent,var(--c)),transparent 70%);
+  opacity:0;
+  transition:opacity .26s;
+}
+.feat-card:hover::after{opacity:1}
+
+/* Remove old bottom bar */
+.feat-card::before{display:none}
+
+.feat-ico{
+  width:50px;height:50px;
+  border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;
+  margin-bottom:18px;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);
+  transition:border-color .26s, box-shadow .26s, background .26s;
+}
+.feat-card:hover .feat-ico{
+  border-color:var(--faccent,var(--c));
+  background:rgba(0,229,255,.06);
+  box-shadow:0 0 16px rgba(0,229,255,.1);
+}
+
+.feat-card h3{font-family:var(--head);font-weight:700;font-size:.97rem;margin-bottom:9px;letter-spacing:-.01em;color:var(--txt)}
+.feat-card p{font-size:.83rem;color:var(--muted);line-height:1.68}
+.ftag{display:inline-block;margin-top:16px;font-size:.65rem;letter-spacing:.07em;text-transform:uppercase;padding:4px 12px;border-radius:100px;font-weight:600}
+.tc{background:rgba(0,229,255,.09);color:var(--c)}
+.tv{background:rgba(123,92,250,.1);color:#a78bfa}
+.tr{background:rgba(255,107,107,.09);color:#ff6b6b}
+.tg{background:rgba(74,222,128,.09);color:var(--g)}
+
+@media(max-width:860px){.fg{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.fg{grid-template-columns:1fr;gap:12px}}
 
 /* DEMO */
 #demo{background:var(--bg2)}
@@ -579,7 +807,7 @@ section{padding:clamp(68px,10vw,116px) 0}
 
 /* TESTIMONIALS */
 #testi{background:var(--bg)}
-.tg2{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:18px;margin-top:52px}
+.tg2{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:18px;margin-top:0}
 .t-card{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:28px 26px;position:relative;overflow:hidden;transition:transform .24s,box-shadow .24s}
 .t-card:hover{transform:translateY(-6px);box-shadow:0 0 40px rgba(123,92,250,.14)}
 .t-quote{position:absolute;top:8px;right:18px;font-size:4.5rem;color:rgba(123,92,250,.07);font-family:Georgia,serif;line-height:1}
@@ -624,8 +852,6 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:clamp(44
   .wrap{padding:0 16px}
   .hbtns{flex-direction:column;align-items:center}
   .bf,.bg{width:100%;max-width:290px;justify-content:center}
-  .steps{grid-template-columns:1fr}
-  .fg{grid-template-columns:1fr}
   .tg2{grid-template-columns:1fr}
   .hstats{gap:16px;padding:20px 16px}
   .stat-num{font-size:1.55rem}
