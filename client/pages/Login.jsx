@@ -23,7 +23,6 @@ const Login = () => {
 
       localStorage.setItem("token", res.data.token);
       alert("Login Successful");
-
       navigate("/dashboard");
     } catch (err) {
       alert(err.response?.data?.message || "Error logging in");
