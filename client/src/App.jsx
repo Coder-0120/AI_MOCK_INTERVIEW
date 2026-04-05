@@ -7,6 +7,7 @@ import Dashboard from "../pages/Dashboard";
 import LandingPage from "../pages/LandingPage";
 import InterviewSetup from "../pages/InterviewSetup";
 import InterviewSession from "../pages/InterviewSession";
+import History from "../pages/History";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/setup" element={<InterviewSetup />} />
         <Route path="/session" element={<InterviewSession />} />
+        <Route path="/history" element={<History />} />
 
 
 

@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const InterviewModel=require("../models/Interview");
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -8,6 +9,7 @@ const generateToken = (id) => {
   });
 };
 
+// to register new user
 const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -40,6 +42,7 @@ const registerUser = async (req, res) => {
   }
 };
 
+// to login user 
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -61,4 +64,23 @@ const loginUser = async (req, res) => {
   }
 };
 
-module.exports={registerUser,loginUser};
+// to fetch all interview per users 
+const showHistory=async(req,res)=>{
+  try{
+    // console.log(req.user);
+    // console.log(req.user._id);
+    const history=await InterviewModel.find({userId:req.user._id}).sort({createdAt:-1});
+   if (history.length === 0) {
+      return res.status(200).json({
+        message: "No records found",
+        history: []
+      });
+    }
+    return res.status(201).json({message:"All interview history fetched succesfully..",history:history});
+  }
+  catch(error){
+    return res.status(500).json({message:error.message})
+  }
+
+}
+module.exports={registerUser,loginUser,showHistory};
