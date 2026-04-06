@@ -372,7 +372,7 @@ export default function History() {
 
           {/* FILTER PILLS */}
           {history.length > 1 && (
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 24 }}>
+            <div style={{ display: "flex",gap: 8, flexWrap: "wrap", marginBottom: 24 }}>
               {roles.map(r => (
                 <button key={r} onClick={() => setFilter(r)} style={{
                   background: filter === r ? "linear-gradient(135deg,#00e5ff,#7b5cfa)" : "rgba(255,255,255,.04)",

@@ -6,72 +6,211 @@ import axios from "axios";
 function ParticleCanvas() {
   const ref = useRef(null);
   useEffect(() => {
-    const cv = ref.current; if (!cv) return;
+    const cv = ref.current;
+    if (!cv) return;
     const ctx = cv.getContext("2d");
-    let W, H, P, t = 0, raf;
+    let W,
+      H,
+      P,
+      t = 0,
+      raf;
     const mouse = { x: -9999, y: -9999 };
-    const COLS = ["#00e5ff","#7b5cfa","#4ade80","#f5c842","#ff6b6b"];
-    const rnd = (a,b) => Math.random()*(b-a)+a;
-    const hexRgb = h => { h=h.replace("#",""); return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; };
-    const mkp = () => ({ x:rnd(0,W),y:rnd(0,H),vx:rnd(-.22,.22),vy:rnd(-.18,.18),r:rnd(1,2.2),col:COLS[Math.floor(rnd(0,COLS.length))],a:rnd(.2,.55),ph:rnd(0,Math.PI*2),ps:rnd(.007,.016) });
-    const resize = () => { W=cv.width=window.innerWidth; H=cv.height=window.innerHeight; };
-    const init = () => { resize(); P=Array.from({length:Math.min(80,Math.floor(W/14))},mkp); };
+    const COLS = ["#00e5ff", "#7b5cfa", "#4ade80", "#f5c842", "#ff6b6b"];
+    const rnd = (a, b) => Math.random() * (b - a) + a;
+    const hexRgb = (h) => {
+      h = h.replace("#", "");
+      return [
+        parseInt(h.slice(0, 2), 16),
+        parseInt(h.slice(2, 4), 16),
+        parseInt(h.slice(4, 6), 16),
+      ];
+    };
+    const mkp = () => ({
+      x: rnd(0, W),
+      y: rnd(0, H),
+      vx: rnd(-0.22, 0.22),
+      vy: rnd(-0.18, 0.18),
+      r: rnd(1, 2.2),
+      col: COLS[Math.floor(rnd(0, COLS.length))],
+      a: rnd(0.2, 0.55),
+      ph: rnd(0, Math.PI * 2),
+      ps: rnd(0.007, 0.016),
+    });
+    const resize = () => {
+      W = cv.width = window.innerWidth;
+      H = cv.height = window.innerHeight;
+    };
+    const init = () => {
+      resize();
+      P = Array.from({ length: Math.min(80, Math.floor(W / 14)) }, mkp);
+    };
     const aurora = () => {
-      t+=.0015;
-      [[0,0,W,H*.6,`rgba(0,229,255,${.025+Math.sin(t)*.008})`,.38+Math.sin(t)*.06],[W,H,0,H*.3,`rgba(123,92,250,${.02+Math.cos(t*.75)*.007})`,.48+Math.cos(t*.75)*.08]].forEach(([x1,y1,x2,y2,col,stop])=>{
-        const g=ctx.createLinearGradient(x1,y1,x2,y2); g.addColorStop(0,"transparent"); g.addColorStop(stop,col); g.addColorStop(1,"transparent");
-        ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      t += 0.0015;
+      [
+        [
+          0,
+          0,
+          W,
+          H * 0.6,
+          `rgba(0,229,255,${0.025 + Math.sin(t) * 0.008})`,
+          0.38 + Math.sin(t) * 0.06,
+        ],
+        [
+          W,
+          H,
+          0,
+          H * 0.3,
+          `rgba(123,92,250,${0.02 + Math.cos(t * 0.75) * 0.007})`,
+          0.48 + Math.cos(t * 0.75) * 0.08,
+        ],
+      ].forEach(([x1, y1, x2, y2, col, stop]) => {
+        const g = ctx.createLinearGradient(x1, y1, x2, y2);
+        g.addColorStop(0, "transparent");
+        g.addColorStop(stop, col);
+        g.addColorStop(1, "transparent");
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, H);
       });
     };
     const frame = () => {
-      ctx.clearRect(0,0,W,H); aurora();
-      for(let i=0;i<P.length;i++){
-        for(let j=i+1;j<P.length;j++){
-          const p=P[i],q=P[j],dx=p.x-q.x,dy=p.y-q.y,d=Math.hypot(dx,dy);
-          if(d<100){ ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y); ctx.strokeStyle=`rgba(0,229,255,${(1-d/100)*.07})`; ctx.lineWidth=.5; ctx.stroke(); }
+      ctx.clearRect(0, 0, W, H);
+      aurora();
+      for (let i = 0; i < P.length; i++) {
+        for (let j = i + 1; j < P.length; j++) {
+          const p = P[i],
+            q = P[j],
+            dx = p.x - q.x,
+            dy = p.y - q.y,
+            d = Math.hypot(dx, dy);
+          if (d < 100) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(q.x, q.y);
+            ctx.strokeStyle = `rgba(0,229,255,${(1 - d / 100) * 0.07})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
         }
-        const p=P[i],md=Math.hypot(p.x-mouse.x,p.y-mouse.y);
-        if(md<120){ ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(mouse.x,mouse.y); ctx.strokeStyle=`rgba(123,92,250,${(1-md/120)*.2})`; ctx.lineWidth=.7; ctx.stroke(); }
+        const p = P[i],
+          md = Math.hypot(p.x - mouse.x, p.y - mouse.y);
+        if (md < 120) {
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(mouse.x, mouse.y);
+          ctx.strokeStyle = `rgba(123,92,250,${(1 - md / 120) * 0.2})`;
+          ctx.lineWidth = 0.7;
+          ctx.stroke();
+        }
       }
-      P.forEach(p=>{
-        p.ph+=p.ps; const a=p.a*(.7+.3*Math.sin(p.ph));
-        const[R,G,B]=hexRgb(p.col); ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-        ctx.fillStyle=`rgba(${R},${G},${B},${a})`; ctx.shadowBlur=6; ctx.shadowColor=p.col; ctx.fill(); ctx.shadowBlur=0;
-        const dx2=p.x-mouse.x,dy2=p.y-mouse.y,md2=Math.hypot(dx2,dy2);
-        if(md2<80){const f=(80-md2)/80*.3; p.vx+=(dx2/md2)*f; p.vy+=(dy2/md2)*f;}
-        const spd=Math.hypot(p.vx,p.vy);
-        if(spd>.65){p.vx*=.94;p.vy*=.94;} if(spd<.06){p.vx+=rnd(-.007,.007);p.vy+=rnd(-.007,.007);}
-        p.x+=p.vx; p.y+=p.vy;
-        if(p.x<-8)p.x=W+8; if(p.x>W+8)p.x=-8; if(p.y<-8)p.y=H+8; if(p.y>H+8)p.y=-8;
+      P.forEach((p) => {
+        p.ph += p.ps;
+        const a = p.a * (0.7 + 0.3 * Math.sin(p.ph));
+        const [R, G, B] = hexRgb(p.col);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${R},${G},${B},${a})`;
+        ctx.shadowBlur = 6;
+        ctx.shadowColor = p.col;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        const dx2 = p.x - mouse.x,
+          dy2 = p.y - mouse.y,
+          md2 = Math.hypot(dx2, dy2);
+        if (md2 < 80) {
+          const f = ((80 - md2) / 80) * 0.3;
+          p.vx += (dx2 / md2) * f;
+          p.vy += (dy2 / md2) * f;
+        }
+        const spd = Math.hypot(p.vx, p.vy);
+        if (spd > 0.65) {
+          p.vx *= 0.94;
+          p.vy *= 0.94;
+        }
+        if (spd < 0.06) {
+          p.vx += rnd(-0.007, 0.007);
+          p.vy += rnd(-0.007, 0.007);
+        }
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < -8) p.x = W + 8;
+        if (p.x > W + 8) p.x = -8;
+        if (p.y < -8) p.y = H + 8;
+        if (p.y > H + 8) p.y = -8;
       });
-      raf=requestAnimationFrame(frame);
+      raf = requestAnimationFrame(frame);
     };
-    const onMove=e=>{mouse.x=e.clientX;mouse.y=e.clientY;};
-    const onLeave=()=>{mouse.x=-9999;mouse.y=-9999;};
-    window.addEventListener("resize",init,{passive:true});
-    window.addEventListener("mousemove",onMove,{passive:true});
-    window.addEventListener("mouseleave",onLeave);
-    init(); frame();
-    return ()=>{cancelAnimationFrame(raf);window.removeEventListener("resize",init);window.removeEventListener("mousemove",onMove);window.removeEventListener("mouseleave",onLeave);};
-  },[]);
-  return <canvas ref={ref} style={{position:"fixed",inset:0,zIndex:0,pointerEvents:"none"}} />;
+    const onMove = (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    };
+    const onLeave = () => {
+      mouse.x = -9999;
+      mouse.y = -9999;
+    };
+    window.addEventListener("resize", init, { passive: true });
+    window.addEventListener("mousemove", onMove, { passive: true });
+    window.addEventListener("mouseleave", onLeave);
+    init();
+    frame();
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", init);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseleave", onLeave);
+    };
+  }, []);
+  return (
+    <canvas
+      ref={ref}
+      style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" }}
+    />
+  );
 }
 
 /* ─── CURSOR ─── */
 function Cursor() {
-  const dotRef=useRef(null), ringRef=useRef(null);
-  useEffect(()=>{
-    let mx=0,my=0,rx=0,ry=0,raf;
-    const dot=dotRef.current,ring=ringRef.current;
-    const onMove=e=>{mx=e.clientX;my=e.clientY;dot.style.left=mx+"px";dot.style.top=my+"px";};
-    const loop=()=>{rx+=(mx-rx)*.14;ry+=(my-ry)*.14;ring.style.left=rx+"px";ring.style.top=ry+"px";raf=requestAnimationFrame(loop);};
-    const on=()=>document.body.classList.add("cur-hov");
-    const off=()=>document.body.classList.remove("cur-hov");
-    document.querySelectorAll("a,button").forEach(el=>{el.addEventListener("mouseenter",on);el.addEventListener("mouseleave",off);});
-    document.addEventListener("mousemove",onMove,{passive:true}); loop();
-    return ()=>{cancelAnimationFrame(raf);document.removeEventListener("mousemove",onMove);};
-  },[]);
-  return(<><div ref={dotRef} className="cur-dot"/><div ref={ringRef} className="cur-ring"/></>);
+  const dotRef = useRef(null),
+    ringRef = useRef(null);
+  useEffect(() => {
+    let mx = 0,
+      my = 0,
+      rx = 0,
+      ry = 0,
+      raf;
+    const dot = dotRef.current,
+      ring = ringRef.current;
+    const onMove = (e) => {
+      mx = e.clientX;
+      my = e.clientY;
+      dot.style.left = mx + "px";
+      dot.style.top = my + "px";
+    };
+    const loop = () => {
+      rx += (mx - rx) * 0.14;
+      ry += (my - ry) * 0.14;
+      ring.style.left = rx + "px";
+      ring.style.top = ry + "px";
+      raf = requestAnimationFrame(loop);
+    };
+    const on = () => document.body.classList.add("cur-hov");
+    const off = () => document.body.classList.remove("cur-hov");
+    document.querySelectorAll("a,button").forEach((el) => {
+      el.addEventListener("mouseenter", on);
+      el.addEventListener("mouseleave", off);
+    });
+    document.addEventListener("mousemove", onMove, { passive: true });
+    loop();
+    return () => {
+      cancelAnimationFrame(raf);
+      document.removeEventListener("mousemove", onMove);
+    };
+  }, []);
+  return (
+    <>
+      <div ref={dotRef} className="cur-dot" />
+      <div ref={ringRef} className="cur-ring" />
+    </>
+  );
 }
 
 /* ─── SCORE RING ─── */
@@ -80,19 +219,61 @@ function ScoreRing({ score }) {
   const r = 54;
   const circ = 2 * Math.PI * r;
   const offset = circ - (pct / 100) * circ;
-  const color = score >= 8 ? "#4ade80" : score >= 6 ? "#00e5ff" : score >= 4 ? "#f5c842" : "#ff6b6b";
-  const grade = score >= 9?"A+":score >= 8?"A":score >= 7?"B+":score >= 6?"B":score >= 5?"C+":"C";
+  const color =
+    score >= 8
+      ? "#4ade80"
+      : score >= 6
+        ? "#00e5ff"
+        : score >= 4
+          ? "#f5c842"
+          : "#ff6b6b";
+  const grade =
+    score >= 9
+      ? "A+"
+      : score >= 8
+        ? "A"
+        : score >= 7
+          ? "B+"
+          : score >= 6
+            ? "B"
+            : score >= 5
+              ? "C+"
+              : "C";
   return (
     <div className="score-ring-wrap">
       <svg width="130" height="130" viewBox="0 0 130 130">
-        <circle cx="65" cy="65" r={r} fill="none" stroke="rgba(255,255,255,.06)" strokeWidth="10"/>
-        <circle cx="65" cy="65" r={r} fill="none" stroke={color} strokeWidth="10"
-          strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
-          transform="rotate(-90 65 65)" style={{transition:"stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)"}}/>
+        <circle
+          cx="65"
+          cy="65"
+          r={r}
+          fill="none"
+          stroke="rgba(255,255,255,.06)"
+          strokeWidth="10"
+        />
+        <circle
+          cx="65"
+          cy="65"
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth="10"
+          strokeDasharray={circ}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          transform="rotate(-90 65 65)"
+          style={{
+            transition: "stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)",
+          }}
+        />
       </svg>
       <div className="sr-center">
-        <span className="sr-score" style={{color}}>{score}<span className="sr-denom">/10</span></span>
-        <span className="sr-grade" style={{color}}>{grade}</span>
+        <span className="sr-score" style={{ color }}>
+          {score}
+          <span className="sr-denom">/10</span>
+        </span>
+        <span className="sr-grade" style={{ color }}>
+          {grade}
+        </span>
       </div>
     </div>
   );
@@ -103,41 +284,50 @@ function ScoreRing({ score }) {
 ═══════════════════════════════ */
 export default function Session() {
   const { state } = useLocation();
-  const navigate  = useNavigate();
+  const navigate = useNavigate();
   const role = state?.role;
 
-  const [questions, setQuestions]   = useState([]);
-  const [current, setCurrent]       = useState(0);
-  const [answers, setAnswers]       = useState([]);
-  const [listening, setListening]   = useState(false);
-  const [answered, setAnswered]     = useState(false);
-  const [feedback, setFeedback]     = useState("");
-  const [score, setScore]           = useState(null);
-  const [completed, setCompleted]   = useState(false);
-  const [loading, setLoading]       = useState(true);
+  const [questions, setQuestions] = useState([]);
+  const [current, setCurrent] = useState(0);
+  const [answers, setAnswers] = useState([]);
+  const [listening, setListening] = useState(false);
+  const [answered, setAnswered] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const [score, setScore] = useState(null);
+  const [completed, setCompleted] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [visible, setVisible]       = useState(false);
-  const [scrolled, setScrolled]     = useState(false);
-  const [mobOpen, setMobOpen]       = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [mobOpen, setMobOpen] = useState(false);
 
   const recognitionRef = useRef(null);
   const token = localStorage.getItem("token");
 
-  useEffect(()=>{ setTimeout(()=>setVisible(true), 80); },[]);
-  useEffect(()=>{
-    const fn=()=>setScrolled(window.scrollY>10);
-    window.addEventListener("scroll",fn,{passive:true});
-    return()=>window.removeEventListener("scroll",fn);
-  },[]);
+  useEffect(() => {
+    setTimeout(() => setVisible(true), 80);
+  }, []);
+  useEffect(() => {
+    const fn = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", fn, { passive: true });
+    return () => window.removeEventListener("scroll", fn);
+  }, []);
 
   /* Speech Recognition */
   useEffect(() => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { alert("Speech Recognition not supported in this browser."); return; }
+    if (!SR) {
+      alert("Speech Recognition not supported in this browser.");
+      return;
+    }
     const recognition = new SR();
     recognition.onresult = (e) => {
       const text = e.results[0][0].transcript;
-      setAnswers(prev => [...prev, text]);
+      setAnswers((prev) => {
+        const updated = [...prev];
+        updated[current] = text; // replace answer for current question
+        return updated;
+      });
       setListening(false);
       setAnswered(true);
     };
@@ -150,7 +340,10 @@ export default function Session() {
     if (!role) return;
     const fetchQuestions = async () => {
       try {
-        const res = await axios.post("http://localhost:5000/api/interview/questions", { role });
+        const res = await axios.post(
+          "http://localhost:5000/api/interview/questions",
+          { role },
+        );
         setQuestions(res.data.questions);
       } catch (err) {
         console.error(err);
@@ -170,18 +363,27 @@ export default function Session() {
 
   const nextQuestion = async () => {
     if (current < questions.length - 1) {
-      setCurrent(c => c + 1);
+      setCurrent((c) => c + 1);
       setAnswered(false);
     } else {
       setSubmitting(true);
       try {
-        const res = await axios.post("http://localhost:5000/api/interview/feedback", { role, questions, answers });
+        const res = await axios.post(
+          "http://localhost:5000/api/interview/feedback",
+          { role, questions, answers },
+        );
         setFeedback(res.data.feedback);
         setScore(res.data.score);
         await axios.post(
           "http://localhost:5000/api/interview/save",
-          { role, questions, answers, feedback: res.data.feedback, score: res.data.score },
-          { headers: { Authorization: `Bearer ${token}` } }
+          {
+            role,
+            questions,
+            answers,
+            feedback: res.data.feedback,
+            score: res.data.score,
+          },
+          { headers: { Authorization: `Bearer ${token}` } },
         );
         setCompleted(true);
       } catch (err) {
@@ -193,45 +395,81 @@ export default function Session() {
     }
   };
 
-  const progress = questions.length > 0 ? ((current) / questions.length) * 100 : 0;
-  const go = id => { setMobOpen(false); navigate("/"+id); };
+  const progress =
+    questions.length > 0 ? (current / questions.length) * 100 : 0;
+  const go = (id) => {
+    setMobOpen(false);
+    navigate("/" + id);
+  };
 
   return (
     <>
       <style>{CSS}</style>
-      <ParticleCanvas/>
-      <Cursor/>
+      <ParticleCanvas />
+      <Cursor />
 
       {/* NAV */}
-      <nav className={`nav ${scrolled?"sc":""}`}>
+      <nav className={`nav ${scrolled ? "sc" : ""}`}>
         <div className="ni">
-          <a className="logo" onClick={()=>navigate("/")}><span className="ldot"/>InterviewAI</a>
+          <a className="logo" onClick={() => navigate("/")}>
+            <span className="ldot" />
+            InterviewAI
+          </a>
           <ul className="nl">
-            {[["dashboard","Dashboard"],["setup","New Interview"],["history","History"],["profile","Profile"]].map(([id,lbl])=>(
-              <li key={id}><a onClick={()=>go(id)}>{lbl}</a></li>
+            {[
+              ["dashboard", "Dashboard"],
+              ["setup", "New Interview"],
+              ["history", "History"],
+              ["profile", "Profile"],
+            ].map(([id, lbl]) => (
+              <li key={id}>
+                <a onClick={() => go(id)}>{lbl}</a>
+              </li>
             ))}
           </ul>
-          <button className="ncta" onClick={()=>navigate("/setup")}>Start Free →</button>
-          <button className={`ham ${mobOpen?"o":""}`} onClick={()=>setMobOpen(!mobOpen)}><span/><span/><span/></button>
+          <button className="ncta" onClick={() => navigate("/setup")}>
+            Start Free →
+          </button>
+          <button
+            className={`ham ${mobOpen ? "o" : ""}`}
+            onClick={() => setMobOpen(!mobOpen)}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
         </div>
       </nav>
-      <div className={`ov ${mobOpen?"o":""}`} onClick={()=>setMobOpen(false)}/>
-      <div className={`mob ${mobOpen?"o":""}`}>
-        {[["dashboard","🏠","Dashboard"],["setup","🎤","New Interview"],["history","📊","History"],["profile","👤","Profile"]].map(([id,e,lbl])=>(
-          <a key={id} onClick={()=>go(id)}>{e} {lbl}</a>
+      <div
+        className={`ov ${mobOpen ? "o" : ""}`}
+        onClick={() => setMobOpen(false)}
+      />
+      <div className={`mob ${mobOpen ? "o" : ""}`}>
+        {[
+          ["dashboard", "🏠", "Dashboard"],
+          ["setup", "🎤", "New Interview"],
+          ["history", "📊", "History"],
+          ["profile", "👤", "Profile"],
+        ].map(([id, e, lbl]) => (
+          <a key={id} onClick={() => go(id)}>
+            {e} {lbl}
+          </a>
         ))}
-        <a className="mcta" onClick={()=>navigate("/setup")}>🎤 Start Mock Interview</a>
+        <a className="mcta" onClick={() => navigate("/setup")}>
+          🎤 Start Mock Interview
+        </a>
       </div>
 
       {/* STAGE */}
       <div className="stage">
-        <div className={`session-wrap ${visible?"in":""}`}>
-
+        <div className={`session-wrap ${visible ? "in" : ""}`}>
           {/* ── LOADING ── */}
           {loading && (
             <div className="load-state">
-              <div className="spinner"/>
-              <p className="load-txt">Generating your <span className="gt">{role}</span> questions…</p>
+              <div className="spinner" />
+              <p className="load-txt">
+                Generating your <span className="gt">{role}</span> questions…
+              </p>
             </div>
           )}
 
@@ -240,13 +478,18 @@ export default function Session() {
             <>
               {/* Header */}
               <div className="sess-header">
-                <div className="chip"><span className="cdot"/>{role?.toUpperCase()} INTERVIEW</div>
-                <span className="q-counter">{current + 1} / {questions.length}</span>
+                <div className="chip">
+                  <span className="cdot" />
+                  {role?.toUpperCase()} INTERVIEW
+                </div>
+                <span className="q-counter">
+                  {current + 1} / {questions.length}
+                </span>
               </div>
 
               {/* Progress bar */}
               <div className="prog-track">
-                <div className="prog-fill" style={{width:`${progress}%`}}/>
+                <div className="prog-fill" style={{ width: `${progress}%` }} />
               </div>
 
               {/* Question card */}
@@ -268,25 +511,35 @@ export default function Session() {
               {/* Controls */}
               <div className="controls">
                 <button
-                  className={`mic-btn ${listening?"active":""}`}
+                  className={`mic-btn ${listening ? "active" : ""}`}
                   onClick={startRecording}
                   disabled={listening}
                 >
                   <span className="mic-icon">{listening ? "🔴" : "🎤"}</span>
-                  {listening ? "Listening…" : answered ? "Re-record" : "Speak Answer"}
-                  {listening && <span className="pulse-ring"/>}
+                  {listening
+                    ? "Listening…"
+                    : answered
+                      ? "Re-record"
+                      : "Speak Answer"}
+                  {listening && <span className="pulse-ring" />}
                 </button>
 
                 <button
-                  className={`next-btn ${!answered?"dim":""}`}
+                  className={`next-btn ${!answered ? "dim" : ""}`}
                   onClick={nextQuestion}
                   disabled={!answered || submitting}
                 >
-                  {submitting
-                    ? <><span className="btn-spinner"/>Submitting…</>
-                    : current === questions.length - 1 ? "Submit Interview →" : "Next Question →"
-                  }
-                  <span className="btn-glow"/>
+                  {submitting ? (
+                    <>
+                      <span className="btn-spinner" />
+                      Submitting…
+                    </>
+                  ) : current === questions.length - 1 ? (
+                    "Submit Interview →"
+                  ) : (
+                    "Next Question →"
+                  )}
+                  <span className="btn-glow" />
                 </button>
               </div>
             </>
@@ -295,13 +548,18 @@ export default function Session() {
           {/* ── RESULT ── */}
           {completed && (
             <div className="result-wrap">
-              <div className="chip"><span className="cdot"/>Interview Complete</div>
+              <div className="chip">
+                <span className="cdot" />
+                Interview Complete
+              </div>
               <h1 className="result-title">
                 Great job, <span className="gt">Champion!</span> 🎉
               </h1>
-              <p className="result-sub">Here's how you performed in your {role} interview.</p>
+              <p className="result-sub">
+                Here's how you performed in your {role} interview.
+              </p>
 
-              <ScoreRing score={score ?? 0}/>
+              <ScoreRing score={score ?? 0} />
 
               <div className="feedback-card">
                 <div className="fb-label">💡 AI Feedback</div>
@@ -309,16 +567,19 @@ export default function Session() {
               </div>
 
               <div className="result-actions">
-                <button className="cta-btn" onClick={()=>navigate("/setup")}>
-                  <span className="btn-glow"/>🔁 Try Another Role
+                <button className="cta-btn" onClick={() => navigate("/setup")}>
+                  <span className="btn-glow" />
+                  🔁 Try Another Role
                 </button>
-                <button className="ghost-btn" onClick={()=>navigate("/dashboard")}>
+                <button
+                  className="ghost-btn"
+                  onClick={() => navigate("/dashboard")}
+                >
                   📊 View Dashboard
                 </button>
               </div>
             </div>
           )}
-
         </div>
       </div>
     </>
