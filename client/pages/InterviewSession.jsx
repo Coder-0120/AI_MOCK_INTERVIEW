@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
+import * as faceapi from "face-api.js";
 
 /* ─── PARTICLE CANVAS ─── */
 function ParticleCanvas() {
@@ -79,9 +80,7 @@ function ParticleCanvas() {
         for (let j = i + 1; j < P.length; j++) {
           const p = P[i],
             q = P[j],
-            dx = p.x - q.x,
-            dy = p.y - q.y,
-            d = Math.hypot(dx, dy);
+            d = Math.hypot(p.x - q.x, p.y - q.y);
           if (d < 100) {
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
@@ -192,12 +191,6 @@ function Cursor() {
       ring.style.top = ry + "px";
       raf = requestAnimationFrame(loop);
     };
-    const on = () => document.body.classList.add("cur-hov");
-    const off = () => document.body.classList.remove("cur-hov");
-    document.querySelectorAll("a,button").forEach((el) => {
-      el.addEventListener("mouseenter", on);
-      el.addEventListener("mouseleave", off);
-    });
     document.addEventListener("mousemove", onMove, { passive: true });
     loop();
     return () => {
@@ -215,10 +208,10 @@ function Cursor() {
 
 /* ─── SCORE RING ─── */
 function ScoreRing({ score }) {
-  const pct = (score / 10) * 100;
-  const r = 54;
-  const circ = 2 * Math.PI * r;
-  const offset = circ - (pct / 100) * circ;
+  const pct = (score / 10) * 100,
+    r = 54,
+    circ = 2 * Math.PI * r,
+    offset = circ - (pct / 100) * circ;
   const color =
     score >= 8
       ? "#4ade80"
@@ -279,6 +272,95 @@ function ScoreRing({ score }) {
   );
 }
 
+/* ─── CAMERA BOX — inline, NOT fixed ─── */
+function CameraBox({ videoRef, faceDetected, cameraReady, cameraError }) {
+  return (
+    <div className="camera-box">
+      <div
+        className="camera-border"
+        style={{
+          borderColor: !cameraReady
+            ? "rgba(255,255,255,0.15)"
+            : faceDetected
+              ? "#4ade80"
+              : "#ff6b6b",
+        }}
+      >
+        {/*
+          IMPORTANT: video element always rendered so the ref attaches.
+          Width + height on the element itself guarantee it occupies space
+          even before the stream loads — this was the root cause of
+          the "camera not showing" bug when using position:fixed.
+        */}
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          playsInline
+          width="200"
+          height="150"
+          className="camera-video"
+        />
+
+        {!cameraReady && !cameraError && (
+          <div className="camera-overlay">
+            <div className="cam-spinner" />
+            <span>Starting camera…</span>
+          </div>
+        )}
+
+        {cameraError && (
+          <div className="camera-overlay">
+            <span style={{ fontSize: 28 }}>📷</span>
+            <span
+              style={{ fontSize: 12, color: "#ff6b6b", textAlign: "center" }}
+            >
+              Camera blocked.
+              <br />
+              Check browser permissions.
+            </span>
+          </div>
+        )}
+
+        {cameraReady && (
+          <>
+            <div
+              className="camera-badge"
+              style={{
+                background: faceDetected
+                  ? "rgba(74,222,128,0.15)"
+                  : "rgba(255,107,107,0.15)",
+                borderColor: faceDetected ? "#4ade80" : "#ff6b6b",
+                color: faceDetected ? "#4ade80" : "#ff6b6b",
+              }}
+            >
+              <span
+                className="badge-dot"
+                style={{ background: faceDetected ? "#4ade80" : "#ff6b6b" }}
+              />
+              {faceDetected ? "Face detected" : "No face"}
+            </div>
+            <div className="camera-live">
+              <span className="live-dot" />
+              REC
+            </div>
+          </>
+        )}
+      </div>
+
+      <p className="camera-hint">
+        {!cameraReady && !cameraError
+          ? "Initializing…"
+          : cameraError
+            ? "Camera unavailable"
+            : faceDetected
+              ? "Good — keep looking at camera"
+              : "⚠️ Look at the camera"}
+      </p>
+    </div>
+  );
+}
+
 /* ═══════════════════════════════
    SESSION
 ═══════════════════════════════ */
@@ -301,7 +383,16 @@ export default function Session() {
   const [scrolled, setScrolled] = useState(false);
   const [mobOpen, setMobOpen] = useState(false);
 
+  const [faceDetected, setFaceDetected] = useState(false);
+  const [cameraReady, setCameraReady] = useState(false);
+  const [cameraError, setCameraError] = useState(false);
+  const [faceOffSeconds, setFaceOffSeconds] = useState(0);
+
   const recognitionRef = useRef(null);
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const detectionIntervalRef = useRef(null);
+  const faceOffRef = useRef(0);
   const token = localStorage.getItem("token");
 
   useEffect(() => {
@@ -313,7 +404,71 @@ export default function Session() {
     return () => window.removeEventListener("scroll", fn);
   }, []);
 
-  /* Speech Recognition */
+  /* ─── CAMERA + FACE-API ─── */
+  useEffect(() => {
+    let localStream;
+    let interval;
+
+    const init = async () => {
+      try {
+        // Load tiny face detector model (must be in /public/models/)
+        await faceapi.nets.tinyFaceDetector.loadFromUri(
+          "https://justadudewhohacks.github.io/face-api.js/models",
+        );
+        // Request camera
+        localStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+            facingMode: "user",
+          },
+          audio: false,
+        });
+        streamRef.current = localStream;
+
+        // Attach to video element
+        if (videoRef.current) {
+          videoRef.current.srcObject = localStream;
+          videoRef.current.onloadedmetadata = () => {
+            videoRef.current
+              .play()
+              .then(() => setCameraReady(true))
+              .catch(console.error);
+          };
+        }
+
+        // Face detection loop — runs every 1 second
+        interval = setInterval(async () => {
+          if (!videoRef.current || videoRef.current.readyState < 2) return;
+          const detections = await faceapi.detectAllFaces(
+            videoRef.current,
+            new faceapi.TinyFaceDetectorOptions({
+              inputSize: 320,
+              scoreThreshold: 0,
+            }),
+          );
+          const detected = detections.length > 0;
+          setFaceDetected(detected);
+          if (!detected) {
+            faceOffRef.current += 1;
+            setFaceOffSeconds(faceOffRef.current);
+          }
+        }, 1000);
+        detectionIntervalRef.current = interval;
+      } catch (err) {
+        console.error("Camera/model error:", err);
+        setCameraError(true);
+      }
+    };
+
+    init();
+    return () => {
+      if (localStream) localStream.getTracks().forEach((t) => t.stop());
+      if (interval) clearInterval(interval);
+    };
+  }, []);
+
+  /* ─── SPEECH RECOGNITION ─── */
   useEffect(() => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
@@ -325,7 +480,7 @@ export default function Session() {
       const text = e.results[0][0].transcript;
       setAnswers((prev) => {
         const updated = [...prev];
-        updated[current] = text; // replace answer for current question
+        updated[current] = text;
         return updated;
       });
       setListening(false);
@@ -333,25 +488,16 @@ export default function Session() {
     };
     recognition.onerror = () => setListening(false);
     recognitionRef.current = recognition;
-  }, []);
+  }, [current]);
 
-  /* Fetch Questions */
+  /* ─── FETCH QUESTIONS ─── */
   useEffect(() => {
     if (!role) return;
-    const fetchQuestions = async () => {
-      try {
-        const res = await axios.post(
-          "http://localhost:5000/api/interview/questions",
-          { role },
-        );
-        setQuestions(res.data.questions);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchQuestions();
+    axios
+      .post("http://localhost:5000/api/interview/questions", { role })
+      .then((res) => setQuestions(res.data.questions))
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, [role]);
 
   const startRecording = () => {
@@ -367,10 +513,26 @@ export default function Session() {
       setAnswered(false);
     } else {
       setSubmitting(true);
+      if (detectionIntervalRef.current)
+        clearInterval(detectionIntervalRef.current);
+      // 🔴 STOP CAMERA STREAM (IMPORTANT)
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+
+      // Optional: reset camera UI
+      setCameraReady(false);
+      setFaceDetected(false);
       try {
         const res = await axios.post(
           "http://localhost:5000/api/interview/feedback",
-          { role, questions, answers },
+          {
+            role,
+            questions,
+            answers,
+            cameraStats: { faceOffSeconds: faceOffRef.current },
+          },
         );
         setFeedback(res.data.feedback);
         setScore(res.data.score);
@@ -463,7 +625,6 @@ export default function Session() {
       {/* STAGE */}
       <div className="stage">
         <div className={`session-wrap ${visible ? "in" : ""}`}>
-          {/* ── LOADING ── */}
           {loading && (
             <div className="load-state">
               <div className="spinner" />
@@ -473,10 +634,8 @@ export default function Session() {
             </div>
           )}
 
-          {/* ── INTERVIEW ── */}
           {!loading && !completed && questions.length > 0 && (
             <>
-              {/* Header */}
               <div className="sess-header">
                 <div className="chip">
                   <span className="cdot" />
@@ -487,28 +646,37 @@ export default function Session() {
                 </span>
               </div>
 
-              {/* Progress bar */}
               <div className="prog-track">
                 <div className="prog-fill" style={{ width: `${progress}%` }} />
               </div>
 
-              {/* Question card */}
-              <div className="q-card">
-                <div className="q-label">Question {current + 1}</div>
-                <p className="q-text">{questions[current]}</p>
-              </div>
-
-              {/* Answer area */}
-              <div className="answer-area">
-                {answered && answers[current] && (
-                  <div className="answer-bubble">
-                    <span className="ab-label">Your answer</span>
-                    <p className="ab-text">"{answers[current]}"</p>
+              {/* ★ Two-column: question left, camera right ★ */}
+              <div className="interview-row">
+                <div className="interview-left">
+                  <div className="q-card">
+                    <div className="q-label">Question {current + 1}</div>
+                    <p className="q-text">{questions[current]}</p>
                   </div>
+                  <div className="answer-area">
+                    {answered && answers[current] && (
+                      <div className="answer-bubble">
+                        <span className="ab-label">Your answer</span>
+                        <p className="ab-text">"{answers[current]}"</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {!completed && (
+                  <CameraBox
+                    videoRef={videoRef}
+                    faceDetected={faceDetected}
+                    cameraReady={cameraReady}
+                    cameraError={cameraError}
+                  />
                 )}
               </div>
 
-              {/* Controls */}
               <div className="controls">
                 <button
                   className={`mic-btn ${listening ? "active" : ""}`}
@@ -523,7 +691,6 @@ export default function Session() {
                       : "Speak Answer"}
                   {listening && <span className="pulse-ring" />}
                 </button>
-
                 <button
                   className={`next-btn ${!answered ? "dim" : ""}`}
                   onClick={nextQuestion}
@@ -542,10 +709,16 @@ export default function Session() {
                   <span className="btn-glow" />
                 </button>
               </div>
+
+              {cameraReady && faceOffSeconds > 5 && (
+                <div className="eye-warn">
+                  👁️ You've looked away for {faceOffSeconds}s — interviewers
+                  notice eye contact!
+                </div>
+              )}
             </>
           )}
 
-          {/* ── RESULT ── */}
           {completed && (
             <div className="result-wrap">
               <div className="chip">
@@ -558,14 +731,43 @@ export default function Session() {
               <p className="result-sub">
                 Here's how you performed in your {role} interview.
               </p>
-
               <ScoreRing score={score ?? 0} />
-
+              <div className="stat-row">
+                <div className="stat-card">
+                  <span className="stat-label">Eye Contact</span>
+                  <span
+                    className="stat-val"
+                    style={{
+                      color:
+                        faceOffSeconds < 10
+                          ? "#4ade80"
+                          : faceOffSeconds < 30
+                            ? "#f5c842"
+                            : "#ff6b6b",
+                    }}
+                  >
+                    {faceOffSeconds < 10
+                      ? "Excellent"
+                      : faceOffSeconds < 30
+                        ? "Needs work"
+                        : "Poor"}
+                  </span>
+                  <span className="stat-sub">
+                    Looked away {faceOffSeconds}s total
+                  </span>
+                </div>
+                <div className="stat-card">
+                  <span className="stat-label">Questions</span>
+                  <span className="stat-val" style={{ color: "#00e5ff" }}>
+                    {questions.length}
+                  </span>
+                  <span className="stat-sub">Answered</span>
+                </div>
+              </div>
               <div className="feedback-card">
                 <div className="fb-label">💡 AI Feedback</div>
                 <p className="fb-text">{feedback}</p>
               </div>
-
               <div className="result-actions">
                 <button className="cta-btn" onClick={() => navigate("/setup")}>
                   <span className="btn-glow" />
@@ -601,26 +803,19 @@ const CSS = `
 }
 html,body{min-height:100%;background:var(--bg);color:var(--txt);font-family:var(--body);font-size:16px;line-height:1.7;overflow-x:hidden;cursor:none;}
 @media(max-width:640px){body{cursor:auto;}}
-
-.cur-dot{position:fixed;width:10px;height:10px;background:var(--c);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .15s,height .15s,background .15s;mix-blend-mode:screen;}
-.cur-ring{position:fixed;width:34px;height:34px;border:1.5px solid rgba(0,229,255,.35);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .15s,height .15s,border-color .15s;}
-body.cur-hov .cur-dot{width:18px;height:18px;background:var(--v);}
-body.cur-hov .cur-ring{width:50px;height:50px;border-color:var(--v);}
+.cur-dot{position:fixed;width:10px;height:10px;background:var(--c);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:screen;}
+.cur-ring{position:fixed;width:34px;height:34px;border:1.5px solid rgba(0,229,255,.35);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);}
 @media(max-width:640px){.cur-dot,.cur-ring{display:none;}}
-
-nav{position:relative;z-index:1;}
 .nav{position:fixed;top:0;left:0;right:0;z-index:500;padding:0 clamp(16px,4vw,40px);transition:background .35s,border-color .35s;}
 .nav.sc{background:rgba(6,9,16,.92);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);}
 .ni{max-width:1080px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:68px;}
-.logo{font-family:var(--head);font-weight:800;font-size:1.28rem;letter-spacing:-.03em;text-decoration:none;color:var(--txt);display:flex;align-items:center;gap:10px;cursor:pointer;transition:opacity .2s;background:none;border:none;}
-.logo:hover{opacity:.8;}
+.logo{font-family:var(--head);font-weight:800;font-size:1.28rem;letter-spacing:-.03em;text-decoration:none;color:var(--txt);display:flex;align-items:center;gap:10px;cursor:pointer;background:none;border:none;}
 .ldot{width:9px;height:9px;border-radius:50%;background:var(--c);box-shadow:0 0 10px var(--c);animation:pp 2s ease-in-out infinite;flex-shrink:0;}
 @keyframes pp{0%,100%{box-shadow:0 0 6px var(--c);transform:scale(1)}50%{box-shadow:0 0 22px var(--c);transform:scale(1.35)}}
 .nl{display:flex;gap:2px;list-style:none;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:100px;padding:4px;}
 .nl a{display:block;text-decoration:none;color:var(--muted);font-size:.84rem;font-weight:500;padding:7px 17px;border-radius:100px;transition:color .2s,background .2s;white-space:nowrap;cursor:pointer;}
 .nl a:hover{color:var(--txt);background:rgba(255,255,255,.08);}
-.ncta{font-family:var(--head);font-weight:700;font-size:.84rem;background:linear-gradient(135deg,var(--c),var(--v));color:#fff;padding:9px 24px;border-radius:100px;letter-spacing:.01em;box-shadow:0 0 20px rgba(0,229,255,.22);transition:transform .2s,box-shadow .2s;white-space:nowrap;cursor:pointer;border:none;}
-.ncta:hover{transform:translateY(-2px);box-shadow:0 0 36px rgba(0,229,255,.42);}
+.ncta{font-family:var(--head);font-weight:700;font-size:.84rem;background:linear-gradient(135deg,var(--c),var(--v));color:#fff;padding:9px 24px;border-radius:100px;box-shadow:0 0 20px rgba(0,229,255,.22);cursor:pointer;border:none;}
 .ham{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;border:none;background:none;z-index:600;}
 .ham span{display:block;width:22px;height:2px;background:var(--txt);border-radius:2px;transition:transform .3s,opacity .3s;transform-origin:center;}
 .ham.o span:nth-child(1){transform:translateY(7px) rotate(45deg);}
@@ -634,107 +829,103 @@ nav{position:relative;z-index:1;}
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:540;opacity:0;pointer-events:none;transition:opacity .28s;}
 .ov.o{opacity:1;pointer-events:all;}
 @media(max-width:768px){.nl,.ncta{display:none}.ham{display:flex}}
-
 .chip{display:inline-flex;align-items:center;gap:8px;background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.2);border-radius:100px;padding:7px 22px;font-size:.72rem;font-weight:600;color:var(--c);letter-spacing:.1em;text-transform:uppercase;margin-bottom:20px;}
 .cdot{width:6px;height:6px;border-radius:50%;background:var(--c);box-shadow:0 0 8px var(--c);animation:pp 1.5s infinite;flex-shrink:0;}
 .gt{background:linear-gradient(130deg,var(--c) 0%,var(--v) 55%,var(--r) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-
-/* STAGE */
 .stage{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:100px clamp(20px,5vw,48px) 60px;position:relative;z-index:2;}
-
-.session-wrap{width:100%;max-width:600px;display:flex;flex-direction:column;align-items:center;text-align:center;opacity:0;transform:translateY(28px);transition:opacity .7s cubic-bezier(.4,0,.2,1),transform .7s cubic-bezier(.4,0,.2,1);}
+.session-wrap{width:100%;max-width:860px;display:flex;flex-direction:column;align-items:center;text-align:center;opacity:0;transform:translateY(28px);transition:opacity .7s cubic-bezier(.4,0,.2,1),transform .7s cubic-bezier(.4,0,.2,1);}
 .session-wrap.in{opacity:1;transform:translateY(0);}
-
-/* LOADING */
 .load-state{display:flex;flex-direction:column;align-items:center;gap:20px;}
 .spinner{width:44px;height:44px;border:3px solid rgba(0,229,255,.1);border-top-color:var(--c);border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
 .load-txt{font-size:1rem;color:var(--soft);}
-
-/* SESSION HEADER */
 .sess-header{width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
 .q-counter{font-family:var(--head);font-size:.82rem;font-weight:700;color:var(--muted);background:rgba(255,255,255,.04);border:1px solid var(--border);padding:5px 14px;border-radius:100px;}
-
-/* PROGRESS */
-.prog-track{width:100%;height:4px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;margin-bottom:28px;}
+.prog-track{width:100%;height:4px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;margin-bottom:24px;}
 .prog-fill{height:100%;background:linear-gradient(90deg,var(--c),var(--v));border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1);}
 
-/* QUESTION CARD */
-.q-card{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:32px 28px;margin-bottom:20px;position:relative;overflow:hidden;}
-.q-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--c),var(--v) 60%,transparent);}
-.q-label{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--c);margin-bottom:12px;font-weight:600;}
-.q-text{font-size:clamp(1rem,2.2vw,1.18rem);color:var(--txt);font-weight:500;line-height:1.65;}
+/* ★ TWO-COLUMN LAYOUT ★ */
+.interview-row{width:100%;display:flex;gap:16px;align-items:flex-start;margin-bottom:16px;}
+.interview-left{flex:1;display:flex;flex-direction:column;gap:12px;min-width:0;}
 
-/* ANSWER BUBBLE */
-.answer-area{width:100%;min-height:60px;margin-bottom:8px;}
-.answer-bubble{background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.14);border-radius:14px;padding:16px 20px;text-align:left;animation:fadeIn .35s ease;}
+.q-card{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:28px 24px;position:relative;overflow:hidden;text-align:left;}
+.q-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--c),var(--v) 60%,transparent);}
+.q-label{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--c);margin-bottom:10px;font-weight:600;}
+.q-text{font-size:clamp(.95rem,2vw,1.1rem);color:var(--txt);font-weight:500;line-height:1.65;}
+.answer-area{width:100%;}
+.answer-bubble{background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.14);border-radius:14px;padding:14px 18px;text-align:left;animation:fadeIn .35s ease;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .ab-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--c);display:block;margin-bottom:6px;}
 .ab-text{font-size:.88rem;color:var(--soft);font-style:italic;line-height:1.6;}
 
-/* CONTROLS */
-.controls{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;margin-top:8px;}
-
-/* MIC BUTTON */
-.mic-btn{
-  position:relative;display:inline-flex;align-items:center;gap:10px;
-  background:var(--bg2);border:1px solid var(--border);
-  color:var(--txt);font-family:var(--head);font-weight:700;font-size:.9rem;
-  padding:14px 36px;border-radius:14px;cursor:pointer;
-  transition:border-color .22s,background .22s,transform .22s;
-  width:100%;justify-content:center;
+/* ★ CAMERA ★ */
+.camera-box{flex-shrink:0;width:200px;display:flex;flex-direction:column;align-items:center;gap:8px;}
+.camera-border{
+  width:200px;height:150px;
+  border-radius:14px;border:2px solid rgba(255,255,255,0.15);
+  overflow:hidden;background:#000;position:relative;
+  transition:border-color 0.4s ease;
+  /* Force the element to occupy space even before stream loads */
+  display:block;
 }
+.camera-video{
+  /* Must fill the container */
+  width:100% !important;
+  height:100% !important;
+  object-fit:cover;
+  display:block;
+  transform:scaleX(-1); /* mirror */
+}
+.camera-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:rgba(0,0,0,0.7);color:var(--soft);font-size:12px;}
+.cam-spinner{width:24px;height:24px;border:2px solid rgba(0,229,255,.2);border-top-color:var(--c);border-radius:50%;animation:spin .8s linear infinite;}
+.camera-badge{position:absolute;bottom:6px;left:6px;display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;border:1px solid;font-size:10px;font-weight:600;letter-spacing:.04em;}
+.badge-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.camera-live{position:absolute;top:6px;right:6px;display:flex;align-items:center;gap:4px;background:rgba(0,0,0,0.55);border-radius:20px;padding:3px 7px;font-size:10px;font-weight:700;color:#fff;letter-spacing:.06em;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#ff4444;animation:blink 1.2s ease-in-out infinite;flex-shrink:0;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+.camera-hint{font-size:11px;color:var(--muted);text-align:center;line-height:1.4;}
+
+/* Mobile: stack camera below question */
+@media(max-width:600px){
+  .interview-row{flex-direction:column;}
+  .camera-box,.camera-border{width:100%;}
+  .camera-border{height:200px;}
+}
+
+.eye-warn{width:100%;margin-top:8px;padding:10px 16px;background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.25);border-radius:10px;font-size:.82rem;color:var(--r);text-align:left;animation:fadeIn .3s ease;}
+.controls{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;margin-top:4px;}
+.mic-btn{position:relative;display:inline-flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);color:var(--txt);font-family:var(--head);font-weight:700;font-size:.9rem;padding:14px 36px;border-radius:14px;cursor:pointer;transition:border-color .22s,background .22s,transform .22s;width:100%;justify-content:center;}
 .mic-btn:hover:not(:disabled){border-color:rgba(0,229,255,.4);background:rgba(0,229,255,.05);transform:translateY(-2px);}
 .mic-btn.active{border-color:var(--r);background:rgba(255,107,107,.06);color:var(--r);}
 .mic-btn:disabled{opacity:.6;cursor:not-allowed;}
 .mic-icon{font-size:1.1rem;}
 .pulse-ring{position:absolute;inset:-4px;border-radius:18px;border:2px solid var(--r);animation:pulse 1.2s ease-out infinite;pointer-events:none;}
 @keyframes pulse{0%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(1.06)}}
-
-/* NEXT BUTTON */
-.next-btn{
-  position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;
-  background:linear-gradient(135deg,var(--c),var(--v));
-  color:#fff;font-family:var(--head);font-weight:800;font-size:.95rem;
-  padding:15px 40px;border-radius:14px;border:none;cursor:pointer;
-  box-shadow:0 0 30px rgba(0,229,255,.2),0 8px 28px rgba(123,92,250,.16);
-  transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .22s,opacity .22s;
-  overflow:hidden;width:100%;
-}
+.next-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg,var(--c),var(--v));color:#fff;font-family:var(--head);font-weight:800;font-size:.95rem;padding:15px 40px;border-radius:14px;border:none;cursor:pointer;box-shadow:0 0 30px rgba(0,229,255,.2),0 8px 28px rgba(123,92,250,.16);transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .22s,opacity .22s;overflow:hidden;width:100%;}
 .next-btn:hover:not(.dim):not(:disabled){transform:translateY(-4px);box-shadow:0 0 50px rgba(0,229,255,.35),0 16px 44px rgba(123,92,250,.28);}
 .next-btn.dim{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none;}
 .btn-glow{position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.18) 50%,transparent 60%);transform:translateX(-100%);transition:transform .55s ease;pointer-events:none;}
 .next-btn:hover:not(.dim) .btn-glow{transform:translateX(100%);}
 .btn-spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
-
-/* RESULT */
-.result-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;}
+.result-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;}
 .result-title{font-family:var(--head);font-size:clamp(1.9rem,4vw,2.8rem);font-weight:800;letter-spacing:-.04em;line-height:1.1;color:var(--txt);margin-bottom:6px;}
 .result-sub{font-size:.95rem;color:var(--soft);margin-bottom:24px;}
-
-/* SCORE RING */
 .score-ring-wrap{position:relative;width:130px;height:130px;margin-bottom:24px;}
 .score-ring-wrap svg{position:absolute;inset:0;}
 .sr-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 .sr-score{font-family:var(--head);font-size:1.9rem;font-weight:800;line-height:1;}
 .sr-denom{font-size:.9rem;opacity:.6;}
 .sr-grade{font-family:var(--head);font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-top:2px;}
-
-/* FEEDBACK */
+.stat-row{display:flex;gap:12px;width:100%;margin-bottom:16px;}
+.stat-card{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.stat-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);}
+.stat-val{font-family:var(--head);font-size:1.3rem;font-weight:800;}
+.stat-sub{font-size:.72rem;color:var(--muted);}
 .feedback-card{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:24px 22px;text-align:left;margin-bottom:24px;}
-.fb-label{font-family:var(--head);font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold, #f5c842);margin-bottom:10px;}
+.fb-label{font-family:var(--head);font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#f5c842;margin-bottom:10px;}
 .fb-text{font-size:.9rem;color:var(--soft);line-height:1.78;}
-
-/* RESULT ACTIONS */
 .result-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;width:100%;}
-.cta-btn{position:relative;display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--c),var(--v));color:#fff;font-family:var(--head);font-weight:800;font-size:.95rem;padding:14px 32px;border-radius:14px;border:none;cursor:pointer;box-shadow:0 0 30px rgba(0,229,255,.22),0 8px 28px rgba(123,92,250,.16);transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .22s;overflow:hidden;}
-.cta-btn:hover{transform:translateY(-4px);box-shadow:0 0 50px rgba(0,229,255,.38),0 16px 44px rgba(123,92,250,.28);}
-.ghost-btn{display:inline-flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.14);color:var(--txt);font-family:var(--head);font-weight:600;font-size:.95rem;padding:14px 32px;border-radius:14px;background:transparent;cursor:pointer;transition:border-color .22s,background .22s,transform .22s;}
-.ghost-btn:hover{border-color:rgba(0,229,255,.4);background:rgba(0,229,255,.06);transform:translateY(-2px);}
-
-@media(max-width:480px){
-  .result-actions{flex-direction:column;}
-  .cta-btn,.ghost-btn{width:100%;justify-content:center;}
-  .q-card{padding:24px 18px;}
-}
+.cta-btn{position:relative;display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--c),var(--v));color:#fff;font-family:var(--head);font-weight:800;font-size:.95rem;padding:14px 32px;border-radius:14px;border:none;cursor:pointer;overflow:hidden;}
+.ghost-btn{display:inline-flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.14);color:var(--txt);font-family:var(--head);font-weight:600;font-size:.95rem;padding:14px 32px;border-radius:14px;background:transparent;cursor:pointer;}
+@media(max-width:480px){.result-actions{flex-direction:column;}.cta-btn,.ghost-btn{width:100%;justify-content:center;}}
 `;
