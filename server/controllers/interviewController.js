@@ -26,7 +26,7 @@ const generateQuestion=async(req,res)=>{
 const generatefeedback=async(req,res)=>{
   try{
 
-    const{role,questions,answers}=req.body;
+    const{role,questions,answers,cameraStats }=req.body;
     const prompt = `
     You are an interviewer.
     Role: ${role}
@@ -62,7 +62,9 @@ const saveInterview = async (req, res) => {
   try {
     const data = new InterviewModel({
       ...req.body,
-      userId: req.user._id  
+      userId: req.user._id, 
+      faceOffSeconds: req.body.cameraStats?.faceOffSeconds || 0
+ 
     });
 
     await data.save();

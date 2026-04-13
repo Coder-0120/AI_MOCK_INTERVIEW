@@ -22,6 +22,10 @@ const schema = new mongoose.Schema(
     feedback: {
       type: String
     },
+     faceOffSeconds: {
+      type: Number,
+      default: 0
+    },
     score: {
       type: Number
     }

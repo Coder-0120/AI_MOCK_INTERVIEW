@@ -263,8 +263,11 @@ export default function LandingPage(){
       {/* NAV */}
       <nav className={`nav ${scrolled?"sc":""}`}>
         <div className="ni">
-          <a className="logo" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})}><span className="ldot"/>InterviewAI</a>
-          <ul className="nl">
+          {/* <a className="logo" ><span className="ldot"/>InterviewAI</a> */}
+   <a onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "1.28rem", letterSpacing: "-.03em", textDecoration: "none", color: "#e8edf5", display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+            <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#00e5ff", boxShadow: "0 0 10px #00e5ff", flexShrink: 0 }} />
+            InterviewAI
+          </a>          <ul className="nl">
             {[["how","How It Works"],["features","Features"],["demo","Demo"],["testi","Reviews"]].map(([id,lbl])=>(
               <li key={id}><a className={active===id?"act":""} onClick={()=>go(id)}>{lbl}</a></li>
             ))}

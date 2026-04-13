@@ -205,8 +205,9 @@ export default Register;
    CSS
 ═══════════════════════════════ */
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root{
   --bg:#060910;--bg2:#0b1018;--bg3:#111827;
   --c:#00e5ff;--v:#7b5cfa;--r:#ff6b6b;--g:#4ade80;

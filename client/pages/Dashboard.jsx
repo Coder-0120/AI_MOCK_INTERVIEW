@@ -84,8 +84,9 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [mobOpen, setMobOpen]   = useState(false);
-  const [greeting, setGreeting] = useState("Good morning");
   const [visible, setVisible]   = useState(false);
+    const navLinks = [["dashboard","Dashboard"],["setup","New Interview"],["history","History"],["profile","Profile"]];
+
 
   useEffect(()=>{
     const h = new Date().getHours();
@@ -113,16 +114,32 @@ export default function Dashboard() {
       <Cursor/>
 
       {/* NAV */}
-      <nav className={`nav ${scrolled?"sc":""}`}>
-        <div className="ni">
-          <a className="logo" onClick={()=>navigate("/")}><span className="ldot"/>InterviewAI</a>
-          <ul className="nl">
-            {[["dashboard","Dashboard"],["setup","New Interview"],["history","History"],["profile","Profile"]].map(([id,lbl])=>(
-              <li key={id}><a className={id==="dashboard"?"act":""} onClick={()=>go(id)}>{lbl}</a></li>
+      <nav style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 500,
+        background: "rgba(6,9,16,.92)", backdropFilter: "blur(24px)",
+        borderBottom: "1px solid rgba(255,255,255,.08)",
+      }}>
+        <div style={{ maxWidth: 1080, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 68, padding: "0 clamp(16px,4vw,40px)" }}>
+          <a onClick={() => navigate("/")} style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "1.28rem", letterSpacing: "-.03em", textDecoration: "none", color: "#e8edf5", display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+            <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#00e5ff", boxShadow: "0 0 10px #00e5ff", flexShrink: 0 }} />
+            InterviewAI
+          </a>
+          <div style={{ display: "flex", gap: 8 }}>
+            {navLinks.map(([id, lbl]) => (
+              <button key={id} onClick={() => navigate("/"+id)} style={{
+                background: id === "dashboard" ? "rgba(255,255,255,.08)" : "none",
+                border: "none", borderRadius: 100, padding: "7px 17px",
+                color: id === "dashboard" ? "#e8edf5" : "#8492aa",
+                fontSize: ".84rem", fontWeight: 500, cursor: "pointer", transition: "color .2s, background .2s",
+              }}
+              onMouseEnter={e => { if(id!=="profile"){e.currentTarget.style.color="#e8edf5";e.currentTarget.style.background="rgba(255,255,255,.06)";}}}
+              onMouseLeave={e => { if(id!=="profile"){e.currentTarget.style.color="#8492aa";e.currentTarget.style.background="none";}}}
+              >{lbl}</button>
             ))}
-          </ul>
-          <button className="ncta" onClick={()=>navigate("/setup")}>Start Free →</button>
-          <button className={`ham ${mobOpen?"o":""}`} onClick={()=>setMobOpen(!mobOpen)}><span/><span/><span/></button>
+          </div>
+          <button onClick={() => navigate("/setup")} style={{ fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: ".84rem", background: "linear-gradient(135deg,#00e5ff,#7b5cfa)", color: "#fff", padding: "9px 24px", borderRadius: 100, border: "none", cursor: "pointer", boxShadow: "0 0 20px rgba(0,229,255,.22)" }}>
+            Start Free →
+          </button>
         </div>
       </nav>
 
@@ -140,25 +157,21 @@ export default function Dashboard() {
 
           <div className="chip"><span className="cdot"/>AI-Powered Interview Platform</div>
 
-          <p className="greet">{greeting},</p>
+
 
           <p className="tagline">
-            Your AI interviewer is ready.<br/>
-            Let's sharpen your edge today.
+            Practice with an AI that reads your voice, face, and answers simultaneously —<br/>
+            then tells you exactly what to fix. Land the job you deserve.
           </p>
 
-          <button className="cta-btn" onClick={()=>navigate("/setup")}>
-            <span className="btn-glow"/>
-            🎤 Start Mock Interview
-          </button>
-
-          <div className="mini-stats">
-            <div className="ms-item"><span className="ms-val">50K+</span><span className="ms-lbl">Interviews</span></div>
-            <div className="ms-div"/>
-            <div className="ms-item"><span className="ms-val">89%</span><span className="ms-lbl">Placement Rate</span></div>
-            <div className="ms-div"/>
-            <div className="ms-item"><span className="ms-val">4.8★</span><span className="ms-lbl">Avg Rating</span></div>
+          <div className="cta-row">
+            <button className="cta-btn primary" onClick={()=>navigate("/setup")}>
+              <span className="btn-glow"/>
+              🎤 Start Mock Interview
+            </button>
           </div>
+
+     
 
         </div>
       </div>
@@ -167,14 +180,14 @@ export default function Dashboard() {
 }
 
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 
 :root{
   --bg:#060910;--bg2:#0b1018;--c:#00e5ff;--v:#7b5cfa;--r:#ff6b6b;--g:#4ade80;
   --txt:#e8edf5;--muted:#8492aa;--soft:#b0bcd0;--border:rgba(255,255,255,0.08);
-  --head:'Syne',sans-serif;--body:'DM Sans',sans-serif;
+  --head:'Outfit',sans-serif;--body:'Plus Jakarta Sans',sans-serif;
 }
 
 html,body{height:100%;overflow:hidden;}
@@ -191,14 +204,14 @@ nav,footer,section{position:relative;z-index:1;}
 .nav{position:fixed;top:0;left:0;right:0;z-index:500;padding:0 clamp(16px,4vw,40px);transition:background .35s,border-color .35s;}
 .nav.sc{background:rgba(6,9,16,.92);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);}
 .ni{max-width:1080px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:68px;}
-.logo{font-family:var(--head);font-weight:800;font-size:1.28rem;letter-spacing:-.03em;text-decoration:none;color:var(--txt);display:flex;align-items:center;gap:10px;cursor:pointer;transition:opacity .2s;background:none;border:none;}
+.logo{font-family:var(--head);font-weight:800;font-size:1.3rem;letter-spacing:-.02em;text-decoration:none;color:var(--txt);display:flex;align-items:center;gap:10px;cursor:pointer;transition:opacity .2s;background:none;border:none;}
 .logo:hover{opacity:.8;}
 .ldot{width:9px;height:9px;border-radius:50%;background:var(--c);box-shadow:0 0 10px var(--c);animation:pp 2s ease-in-out infinite;flex-shrink:0;}
 @keyframes pp{0%,100%{box-shadow:0 0 6px var(--c);transform:scale(1)}50%{box-shadow:0 0 22px var(--c);transform:scale(1.35)}}
 .nl{display:flex;gap:2px;list-style:none;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:100px;padding:4px;}
-.nl a{display:block;text-decoration:none;color:var(--muted);font-size:.84rem;font-weight:500;padding:7px 17px;border-radius:100px;transition:color .2s,background .2s;white-space:nowrap;cursor:pointer;}
+.nl a{display:block;text-decoration:none;color:var(--muted);font-family:var(--head);font-size:.83rem;font-weight:500;padding:7px 18px;border-radius:100px;transition:color .2s,background .2s;white-space:nowrap;cursor:pointer;letter-spacing:.01em;}
 .nl a:hover,.nl a.act{color:var(--txt);background:rgba(255,255,255,.08);}
-.ncta{font-family:var(--head);font-weight:700;font-size:.84rem;background:linear-gradient(135deg,var(--c),var(--v));color:#fff;padding:9px 24px;border-radius:100px;letter-spacing:.01em;box-shadow:0 0 20px rgba(0,229,255,.22);transition:transform .2s,box-shadow .2s;white-space:nowrap;cursor:pointer;border:none;}
+.ncta{font-family:var(--head);font-weight:700;font-size:.84rem;background:linear-gradient(135deg,var(--c),var(--v));color:#fff;padding:9px 24px;border-radius:100px;letter-spacing:.02em;box-shadow:0 0 20px rgba(0,229,255,.22);transition:transform .2s,box-shadow .2s;white-space:nowrap;cursor:pointer;border:none;}
 .ncta:hover{transform:translateY(-2px);box-shadow:0 0 36px rgba(0,229,255,.42);}
 .ham{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;border:none;background:none;z-index:600;}
 .ham span{display:block;width:22px;height:2px;background:var(--txt);border-radius:2px;transition:transform .3s,opacity .3s;transform-origin:center;}
@@ -207,45 +220,64 @@ nav,footer,section{position:relative;z-index:1;}
 .ham.o span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
 .mob{position:fixed;top:0;right:0;bottom:0;width:min(310px,85vw);background:rgba(8,12,20,.97);backdrop-filter:blur(32px);border-left:1px solid var(--border);z-index:550;transform:translateX(100%);transition:transform .32s cubic-bezier(.4,0,.2,1);padding:96px 32px 40px;display:flex;flex-direction:column;gap:6px;}
 .mob.o{transform:translateX(0);}
-.mob a{text-decoration:none;color:var(--soft);font-size:1.05rem;font-weight:500;padding:13px 0;border-bottom:1px solid var(--border);transition:color .18s,padding-left .18s;display:flex;align-items:center;gap:10px;cursor:pointer;}
+.mob a{text-decoration:none;color:var(--soft);font-family:var(--head);font-size:1.05rem;font-weight:500;padding:13px 0;border-bottom:1px solid var(--border);transition:color .18s,padding-left .18s;display:flex;align-items:center;gap:10px;cursor:pointer;}
 .mob a:hover{color:var(--txt);padding-left:8px;}
-.mob .mcta{border:none;margin-top:18px;background:linear-gradient(135deg,var(--c),var(--v));color:#fff;padding:15px 24px;border-radius:12px;justify-content:center;font-family:var(--head);font-weight:700;font-size:.95rem;}
+.mob .mcta{border:none;margin-top:18px;background:linear-gradient(135deg,var(--c),var(--v));color:#fff;padding:15px 24px;border-radius:12px;justify-content:center;font-weight:700;font-size:.95rem;}
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:540;opacity:0;pointer-events:none;transition:opacity .28s;}
 .ov.o{opacity:1;pointer-events:all;}
 @media(max-width:768px){.nl,.ncta{display:none}.ham{display:flex}}
 
-.chip{display:inline-flex;align-items:center;gap:8px;background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.2);border-radius:100px;padding:7px 22px;font-size:.72rem;font-weight:600;color:var(--c);letter-spacing:.1em;text-transform:uppercase;margin-bottom:28px;}
+.chip{display:inline-flex;align-items:center;gap:8px;background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.2);border-radius:100px;padding:7px 22px;font-family:var(--head);font-size:.7rem;font-weight:600;color:var(--c);letter-spacing:.12em;text-transform:uppercase;margin-bottom:24px;}
 .cdot{width:6px;height:6px;border-radius:50%;background:var(--c);box-shadow:0 0 8px var(--c);animation:pp 1.5s infinite;flex-shrink:0;}
+
+/* gradient text variants matching screenshot style */
+.gt-cyan{background:linear-gradient(135deg,#00e5ff,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.gt-purple{background:linear-gradient(135deg,#7b5cfa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.gt-coral{background:linear-gradient(135deg,#ff6b6b,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 
 .stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;padding:0 clamp(20px,5vw,48px);}
 
 .center-wrap{text-align:center;display:flex;flex-direction:column;align-items:center;opacity:0;transform:translateY(28px);transition:opacity .8s cubic-bezier(.4,0,.2,1),transform .8s cubic-bezier(.4,0,.2,1);}
 .center-wrap.in{opacity:1;transform:translateY(0);}
 
-.greet{font-family:var(--head);font-size:clamp(.85rem,1.5vw,1rem);font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.greet{font-family:var(--head);font-size:clamp(.8rem,1.4vw,.95rem);font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
 
-.name{font-family:var(--head);font-size:clamp(2.2rem,5.5vw,4rem);font-weight:800;letter-spacing:-.045em;line-height:1.1;color:var(--txt);margin-bottom:20px;}
+/* BIG display headline — matches screenshot's "Ace Every Interview" style */
+.hero-title{
+  font-family:var(--head);
+  font-size:clamp(3rem,8vw,6rem);
+  font-weight:900;
+  letter-spacing:-.04em;
+  line-height:1.0;
+  color:var(--txt);
+  margin-bottom:24px;
+}
 
-.gt{background:linear-gradient(130deg,var(--c) 0%,var(--v) 55%,var(--r) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.tagline{font-family:var(--body);font-size:clamp(.88rem,1.5vw,1rem);color:var(--soft);line-height:1.8;margin-bottom:40px;max-width:520px;}
 
-.tagline{font-size:clamp(.9rem,1.6vw,1.05rem);color:var(--soft);line-height:1.8;margin-bottom:40px;max-width:380px;}
-
-.cta-btn{position:relative;display:inline-flex;align-items:center;gap:12px;background:linear-gradient(135deg,var(--c),var(--v));color:#fff;font-family:var(--head);font-weight:800;font-size:1.05rem;padding:18px 48px;border-radius:16px;border:none;cursor:pointer;letter-spacing:.01em;box-shadow:0 0 40px rgba(0,229,255,.25),0 12px 40px rgba(123,92,250,.2);transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s;overflow:hidden;}
-.cta-btn:hover{transform:translateY(-5px) scale(1.03);box-shadow:0 0 70px rgba(0,229,255,.4),0 20px 60px rgba(123,92,250,.32);}
-.cta-btn:active{transform:translateY(-2px) scale(1.01);}
+/* two-button CTA row like screenshot */
+.cta-row{display:flex;gap:14px;align-items:center;justify-content:center;flex-wrap:wrap;margin-bottom:48px;}
+.cta-btn{position:relative;display:inline-flex;align-items:center;gap:10px;font-family:var(--head);font-weight:700;font-size:.95rem;padding:14px 36px;border-radius:12px;cursor:pointer;letter-spacing:.02em;overflow:hidden;transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s;}
+.cta-btn.primary{background:linear-gradient(135deg,var(--c),var(--v));color:#fff;border:none;box-shadow:0 0 40px rgba(0,229,255,.25),0 12px 40px rgba(123,92,250,.2);}
+.cta-btn.primary:hover{transform:translateY(-4px) scale(1.03);box-shadow:0 0 70px rgba(0,229,255,.4),0 20px 60px rgba(123,92,250,.32);}
+.cta-btn.ghost{background:rgba(255,255,255,.05);color:var(--txt);border:1px solid rgba(255,255,255,.18);}
+.cta-btn.ghost:hover{transform:translateY(-4px);background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.3);}
 .btn-glow{position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.18) 50%,transparent 60%);transform:translateX(-100%);transition:transform .55s ease;pointer-events:none;}
 .cta-btn:hover .btn-glow{transform:translateX(100%);}
 
-.mini-stats{display:flex;align-items:center;margin-top:40px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:14px;padding:14px 28px;}
-.ms-item{display:flex;flex-direction:column;align-items:center;padding:0 20px;}
-.ms-val{font-family:var(--head);font-size:1.05rem;font-weight:800;background:linear-gradient(160deg,#fff 20%,rgba(255,255,255,.65));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.2;}
-.ms-lbl{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;}
-.ms-div{width:1px;height:32px;background:var(--border);flex-shrink:0;}
+/* stat row — matches screenshot big-number style */
+.mini-stats{display:flex;align-items:center;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:16px;padding:20px 36px;}
+.ms-item{display:flex;flex-direction:column;align-items:center;padding:0 24px;}
+.ms-val{font-family:var(--head);font-size:clamp(1.6rem,3vw,2.2rem);font-weight:900;letter-spacing:-.03em;color:var(--txt);line-height:1;}
+.ms-unit{font-size:.6em;color:var(--c);vertical-align:super;}
+.ms-lbl{font-family:var(--head);font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:5px;}
+.ms-div{width:1px;height:40px;background:var(--border);flex-shrink:0;}
 
-@media(max-width:480px){
-  .name{font-size:clamp(1.8rem,8vw,2.4rem);}
-  .cta-btn{padding:16px 36px;font-size:.95rem;}
-  .mini-stats{padding:12px 16px;}
-  .ms-item{padding:0 12px;}
+@media(max-width:600px){
+  .hero-title{font-size:clamp(2.2rem,10vw,3.5rem);}
+  .mini-stats{padding:16px 12px;}
+  .ms-item{padding:0 10px;}
+  .ms-val{font-size:1.4rem;}
+  .cta-btn{padding:13px 26px;font-size:.88rem;}
 }
 `;
