@@ -323,7 +323,7 @@ export default function Session() {
       {/* NAV */}
       <nav className={`nav ${scrolled ? "sc" : ""}`}>
         <div className="ni">
-          <a className="logo" onClick={() => navigate("/")}><span className="ldot"/>InterviewAI</a>
+          <a className="logo" onClick={() => navigate("/")} >PrepX</a>
           <ul className="nl">
             {[["dashboard","Dashboard"],["setup","New Interview"],["history","History"],["profile","Profile"]].map(([id,lbl]) => (
               <li key={id}><a onClick={() => go(id)}>{lbl}</a></li>
@@ -457,11 +457,11 @@ html,body{min-height:100%;background:var(--bg);color:var(--txt);font-family:var(
 .nav{position:fixed;top:0;left:0;right:0;z-index:500;padding:0 clamp(16px,4vw,40px);transition:background .35s,border-color .35s;}
 .nav.sc{background:rgba(6,9,16,.92);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);}
 .ni{max-width:1080px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:68px;}
-.logo{font-family:var(--head);font-weight:800;font-size:1.3rem;letter-spacing:-.02em;text-decoration:none;color:var(--txt);display:flex;align-items:center;gap:10px;cursor:pointer;background:none;border:none;}
+.logo{font-family:var(--head);font-weight:800;font-size:1.28rem;letter-spacing:-.03em;text-decoration:none;color:var(--txt);display:flex;align-items:center;gap:10px;cursor:pointer;background:none;border:none;}
 .ldot{width:9px;height:9px;border-radius:50%;background:var(--c);box-shadow:0 0 10px var(--c);animation:pp 2s ease-in-out infinite;flex-shrink:0;}
 @keyframes pp{0%,100%{box-shadow:0 0 6px var(--c);transform:scale(1)}50%{box-shadow:0 0 22px var(--c);transform:scale(1.35)}}
 .nl{display:flex;gap:2px;list-style:none;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:100px;padding:4px;}
-.nl a{display:block;text-decoration:none;color:var(--muted);font-family:var(--head);font-size:.83rem;font-weight:500;padding:7px 18px;border-radius:100px;transition:color .2s,background .2s;white-space:nowrap;cursor:pointer;letter-spacing:.01em;}
+.nl a{display:block;text-decoration:none;color:var(--muted);font-family:var(--head);font-size:.83rem;font-weight:800;padding:7px 18px;border-radius:100px;transition:color .2s,background .2s;white-space:nowrap;cursor:pointer;letter-spacing:.01em;}
 .nl a:hover{color:var(--txt);background:rgba(255,255,255,.08);}
 .ncta{font-family:var(--head);font-weight:700;font-size:.84rem;background:linear-gradient(135deg,var(--c),var(--v));color:#fff;padding:9px 24px;border-radius:100px;letter-spacing:.02em;box-shadow:0 0 20px rgba(0,229,255,.22);cursor:pointer;border:none;transition:transform .2s,box-shadow .2s;}
 .ncta:hover{transform:translateY(-2px);box-shadow:0 0 36px rgba(0,229,255,.42);}

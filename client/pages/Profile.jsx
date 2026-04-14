@@ -118,6 +118,7 @@ export default function Profile() {
   const [user, setUser] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [mobOpen, setMobOpen] = useState(false);
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
@@ -152,34 +153,29 @@ export default function Profile() {
       <style>{CSS}</style>
 
       {/* NAV */}
-      <nav style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 500,
-        background: "rgba(6,9,16,.92)", backdropFilter: "blur(24px)",
-        borderBottom: "1px solid rgba(255,255,255,.08)",
-      }}>
-        <div style={{ maxWidth: 1080, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 68, padding: "0 clamp(16px,4vw,40px)" }}>
-          <a onClick={() => navigate("/")} style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "1.28rem", letterSpacing: "-.03em", textDecoration: "none", color: "#e8edf5", display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-            <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#00e5ff", boxShadow: "0 0 10px #00e5ff", flexShrink: 0 }} />
-            InterviewAI
-          </a>
-          <div style={{ display: "flex", gap: 8 }}>
+      <nav className="nav">
+        <div className="ni">
+          <a className="logo" onClick={() => navigate("/")} >PrepX</a>
+          <ul className="nl">
             {navLinks.map(([id, lbl]) => (
-              <button key={id} onClick={() => navigate("/"+id)} style={{
-                background: id === "profile" ? "rgba(255,255,255,.08)" : "none",
-                border: "none", borderRadius: 100, padding: "7px 17px",
-                color: id === "profile" ? "#e8edf5" : "#8492aa",
-                fontSize: ".84rem", fontWeight: 500, cursor: "pointer", transition: "color .2s, background .2s",
-              }}
-              onMouseEnter={e => { if(id!=="profile"){e.currentTarget.style.color="#e8edf5";e.currentTarget.style.background="rgba(255,255,255,.06)";}}}
-              onMouseLeave={e => { if(id!=="profile"){e.currentTarget.style.color="#8492aa";e.currentTarget.style.background="none";}}}
-              >{lbl}</button>
+              <li key={id}>
+                <a className={id === "profile" ? "act" : ""} onClick={() => navigate("/" + id)} style={{ cursor: "pointer" }}>
+                  {lbl}
+                </a>
+              </li>
             ))}
-          </div>
-          <button onClick={() => navigate("/setup")} style={{ fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: ".84rem", background: "linear-gradient(135deg,#00e5ff,#7b5cfa)", color: "#fff", padding: "9px 24px", borderRadius: 100, border: "none", cursor: "pointer", boxShadow: "0 0 20px rgba(0,229,255,.22)" }}>
-            Start Free →
-          </button>
+          </ul>
+          <button className="ncta" onClick={() => navigate("/setup")}>Start Free →</button>
+          <button className={`ham ${mobOpen ? "o" : ""}`} onClick={() => setMobOpen(!mobOpen)}><span /><span /><span /></button>
         </div>
       </nav>
+      <div className={`ov ${mobOpen ? "o" : ""}`} onClick={() => setMobOpen(false)} />
+      <div className={`mob ${mobOpen ? "o" : ""}`}>
+        {[["dashboard","🏠","Dashboard"],["setup","🎤","New Interview"],["history","📊","History"],["profile","👤","Profile"]].map(([id,e,lbl])=>(
+          <a key={id} onClick={() => { setMobOpen(false); navigate("/" + id); }} style={{ cursor: "pointer" }}>{e} {lbl}</a>
+        ))}
+        <a className="mcta" onClick={() => { setMobOpen(false); navigate("/setup"); }} style={{ cursor: "pointer" }}>🎤 Start New Interview</a>
+      </div>
 
       {/* PAGE */}
       <div style={{ minHeight: "100vh", background: "#060910", color: "#e8edf5", fontFamily: "'DM Sans',sans-serif", paddingTop: 100, paddingBottom: 60, paddingLeft: "clamp(20px,5vw,48px)", paddingRight: "clamp(20px,5vw,48px)" }}>
@@ -307,11 +303,220 @@ const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:   #060910;
+  --bg2:  #0b1018;
+  --c:    #00e5ff;
+  --v:    #7b5cfa;
+  --txt:  #e8edf5;
+  --muted:#8492aa;
+  --border: rgba(255,255,255,0.08);
+}
+
 @keyframes cardIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:.5}50%{opacity:.9}}
+
+/* ── NAV ── */
+.nav { 
+  position:fixed;top:0;left:0;right:0;z-index:500;
+  padding: 0 clamp(16px,4vw,40px);
+  background: rgba(6,9,16,.92);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+  transition: background .35s, border-color .35s;
+}
+
+.ni { 
+  max-width:1080px;
+  margin:0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  height:68px;
+}
+
+.ni > a {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.28rem;
+  letter-spacing: -.03em;
+  text-decoration: none;
+  color: var(--txt);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: opacity .2s;
+}
+.ni > a:hover { opacity:.8; }
+
+.nl { 
+  display:flex;
+  gap:2px;
+  list-style:none;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--border);
+  border-radius:100px;
+  padding:4px;
+}
+
+.nl li { display: flex; }
+
+.nl a { 
+  display:block;
+  text-decoration:none;
+  color:var(--muted);
+  font-size:.84rem;
+  font-weight:500;
+  padding:7px 17px;
+  border-radius:100px;
+  transition:color .2s, background .2s;
+  white-space:nowrap;
+  cursor:pointer;
+}
+
+.nl a:hover, .nl a.act { 
+  color:var(--txt);
+  background: rgba(255,255,255,.08);
+}
+
+.ncta {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: .84rem;
+  background: linear-gradient(135deg,var(--c),var(--v));
+  color: #fff;
+  padding: 9px 24px;
+  border-radius: 100px;
+  letter-spacing: .01em;
+  box-shadow: 0 0 20px rgba(0,229,255,.22);
+  transition: transform .2s, box-shadow .2s;
+  white-space: nowrap;
+  cursor: pointer;
+  border: none;
+}
+.ncta:hover { 
+  transform: translateY(-2px);
+  box-shadow: 0 0 36px rgba(0,229,255,.42);
+}
+
+.ham { 
+  display:none;
+  flex-direction:column;
+  gap:5px;
+  cursor:pointer;
+  padding:6px;
+  border:none;
+  background:none;
+  z-index:600;
+}
+
+.ham span { 
+  display:block;
+  width:22px;
+  height:2px;
+  background:var(--txt);
+  border-radius:2px;
+  transition: transform .3s, opacity .3s;
+  transform-origin:center;
+}
+
+.ham.o span:nth-child(1) { 
+  transform: translateY(7px) rotate(45deg);
+}
+
+.ham.o span:nth-child(2) { 
+  opacity:0;
+  transform: scaleX(0);
+}
+
+.ham.o span:nth-child(3) { 
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+.mob { 
+  position:fixed;
+  top:0;
+  right:0;
+  bottom:0;
+  width:min(310px,85vw);
+  background: rgba(8,12,20,.97);
+  backdrop-filter: blur(32px);
+  border-left: 1px solid var(--border);
+  z-index:550;
+  transform: translateX(100%);
+  transition: transform .32s cubic-bezier(.4,0,.2,1);
+  padding: 96px 32px 40px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.mob.o { 
+  transform: translateX(0);
+}
+
+.mob a { 
+  text-decoration:none;
+  color:var(--muted);
+  font-size:1rem;
+  font-weight:500;
+  padding:13px 0;
+  border-bottom: 1px solid var(--border);
+  transition: color .18s, padding-left .18s;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  cursor:pointer;
+}
+
+.mob a:hover { 
+  color:var(--txt);
+  padding-left:8px;
+}
+
+.mob .mcta { 
+  border:none;
+  margin-top:18px;
+  background: linear-gradient(135deg,var(--c),var(--v));
+  color:#fff;
+  padding:15px 24px;
+  border-radius:12px;
+  justify-content:center;
+  font-family:'Syne',sans-serif;
+  font-weight:600;
+  font-size:.92rem;
+}
+
+.ov { 
+  position:fixed;
+  inset:0;
+  background: rgba(0,0,0,.55);
+  z-index:540;
+  opacity:0;
+  pointer-events:none;
+  transition: opacity .28s;
+}
+
+.ov.o { 
+  opacity:1;
+  pointer-events:all;
+}
+
+@media(max-width:768px){ 
+  .nl, .ncta { 
+    display:none;
+  }
+  .ham { 
+    display:flex;
+  }
+}
+
 @media(max-width:640px){
   nav button:not(:last-child){display:none;}
 }
+
 @media(max-width:480px){
   div[style*="auto-fit"]{grid-template-columns:1fr 1fr!important;}
 }

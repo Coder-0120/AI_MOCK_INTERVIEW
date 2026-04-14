@@ -116,7 +116,7 @@ const Register = () => {
       {/* NAV */}
       <nav className={`nav ${scrolled?"sc":""}`}>
         <div className="ni">
-          <a className="logo" onClick={()=>navigate("/")}><span className="ldot"/>InterviewAI</a>
+          <a className="logo" onClick={()=>navigate("/")} >PrepX</a>
 
           {/* Desktop nav — auth pages only show Login & Register */}
           {/* <ul className="nl">
@@ -142,7 +142,7 @@ const Register = () => {
         <div className={`auth-wrap ${visible?"in":""}`}>
 
           <div className="chip"><span className="cdot"/>Create Account</div>
-          <h1 className="auth-title">Join <span className="gt">InterviewAI</span></h1>
+          <h1 className="auth-title">Join <span className="gt">PrepX</span></h1>
           <p className="auth-sub">Start your AI-powered interview preparation today</p>
 
           <form className="auth-form" onSubmit={handleSubmit}>

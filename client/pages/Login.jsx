@@ -117,7 +117,7 @@ const Login = () => {
       {/* NAV */}
       <nav className={`nav ${scrolled?"sc":""}`}>
         <div className="ni">
-          <a className="logo" onClick={()=>navigate("/")}><span className="ldot"/>InterviewAI</a>
+          <a className="logo" onClick={()=>navigate("/")} >PrepX</a>
 
           {/* Desktop nav — auth pages only show Login & Register */}
           <ul className="nl">
@@ -143,7 +143,7 @@ const Login = () => {
         <div className={`auth-wrap ${visible?"in":""}`}>
 
           <div className="chip"><span className="cdot"/>Welcome Back</div>
-          <h1 className="auth-title">Login to <span className="gt">InterviewAI</span></h1>
+          <h1 className="auth-title">Login to <span className="gt">PrepX</span></h1>
           <p className="auth-sub">Continue your AI-powered interview preparation</p>
 
           <form className="auth-form" onSubmit={handleSubmit}>

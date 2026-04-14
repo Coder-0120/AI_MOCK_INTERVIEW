@@ -110,40 +110,29 @@ export default function InterviewSetup() {
       <Cursor/>
 
       {/* NAV */}
-       <nav style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 500,
-        background: "rgba(6,9,16,.92)", backdropFilter: "blur(24px)",
-        borderBottom: "1px solid rgba(255,255,255,.08)",
-      }}>
-        <div style={{ maxWidth: 1080, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 68, padding: "0 clamp(16px,4vw,40px)" }}>
-          <a onClick={() => navigate("/")} style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "1.28rem", letterSpacing: "-.03em", textDecoration: "none", color: "#e8edf5", display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-            <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#00e5ff", boxShadow: "0 0 10px #00e5ff", flexShrink: 0 }} />
-            InterviewAI
-          </a>
-          <div style={{ display: "flex", gap: 8 }}>
+      <nav className={`nav ${scrolled ? "sc" : ""}`}>
+        <div className="ni">
+          <a className="logo" onClick={() => navigate("/")} >PrepX</a>
+          <ul className="nl">
             {navLinks.map(([id, lbl]) => (
-              <button key={id} onClick={() => navigate("/"+id)} style={{
-                background: id === "setup" ? "rgba(255,255,255,.08)" : "none",
-                border: "none", borderRadius: 100, padding: "7px 17px",
-                color: id === "setup" ? "#e8edf5" : "#8492aa",
-                fontSize: ".84rem", fontWeight: 500, cursor: "pointer", transition: "color .2s, background .2s",
-              }}
-              onMouseEnter={e => { if(id!=="profile"){e.currentTarget.style.color="#e8edf5";e.currentTarget.style.background="rgba(255,255,255,.06)";}}}
-              onMouseLeave={e => { if(id!=="profile"){e.currentTarget.style.color="#8492aa";e.currentTarget.style.background="none";}}}
-              >{lbl}</button>
+              <li key={id}>
+                <a className={id === "setup" ? "act" : ""} onClick={() => go(id)}>
+                  {lbl}
+                </a>
+              </li>
             ))}
-          </div>
-          <button onClick={() => navigate("/setup")} style={{ fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: ".84rem", background: "linear-gradient(135deg,#00e5ff,#7b5cfa)", color: "#fff", padding: "9px 24px", borderRadius: 100, border: "none", cursor: "pointer", boxShadow: "0 0 20px rgba(0,229,255,.22)" }}>
-            Start Free →
-          </button>
+          </ul>
+          <button className="ncta" onClick={() => navigate("/setup")}>Start Free →</button>
+          <button className={`ham ${mobOpen?"o":""}`} onClick={() => setMobOpen(!mobOpen)}><span/><span/><span/></button>
         </div>
       </nav>
+
       <div className={`ov ${mobOpen?"o":""}`} onClick={()=>setMobOpen(false)}/>
       <div className={`mob ${mobOpen?"o":""}`}>
         {[["dashboard","🏠","Dashboard"],["setup","🎤","New Interview"],["history","📊","History"],["profile","👤","Profile"]].map(([id,e,lbl])=>(
           <a key={id} onClick={()=>go(id)}>{e} {lbl}</a>
         ))}
-        <a className="mcta" onClick={()=>navigate("/setup")}>🎤 Start Mock Interview</a>
+        <a className="mcta" onClick={() => { setMobOpen(false); navigate("/setup"); }}>🎤 Start New Interview</a>
       </div>
 
       {/* STAGE */}
@@ -219,7 +208,7 @@ nav,section{position:relative;z-index:1;}
 .nav{position:fixed;top:0;left:0;right:0;z-index:500;padding:0 clamp(16px,4vw,40px);transition:background .35s,border-color .35s;}
 .nav.sc{background:rgba(6,9,16,.92);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);}
 .ni{max-width:1080px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:68px;}
-.logo{font-family:var(--head);font-weight:800;font-size:1.3rem;letter-spacing:-.02em;text-decoration:none;color:var(--txt);display:flex;align-items:center;gap:10px;cursor:pointer;transition:opacity .2s;background:none;border:none;}
+.logo{font-family:var(--head);font-weight:800;font-size:1.28rem;letter-spacing:-.03em;text-decoration:none;color:var(--txt);display:flex;align-items:center;gap:10px;cursor:pointer;transition:opacity .2s;background:none;border:none;}
 .logo:hover{opacity:.8;}
 .ldot{width:9px;height:9px;border-radius:50%;background:var(--c);box-shadow:0 0 10px var(--c);animation:pp 2s ease-in-out infinite;flex-shrink:0;}
 @keyframes pp{0%,100%{box-shadow:0 0 6px var(--c);transform:scale(1)}50%{box-shadow:0 0 22px var(--c);transform:scale(1.35)}}

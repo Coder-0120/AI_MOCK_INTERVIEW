@@ -263,11 +263,8 @@ export default function LandingPage(){
       {/* NAV */}
       <nav className={`nav ${scrolled?"sc":""}`}>
         <div className="ni">
-          {/* <a className="logo" ><span className="ldot"/>InterviewAI</a> */}
-   <a onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: "1.28rem", letterSpacing: "-.03em", textDecoration: "none", color: "#e8edf5", display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-            <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#00e5ff", boxShadow: "0 0 10px #00e5ff", flexShrink: 0 }} />
-            InterviewAI
-          </a>          <ul className="nl">
+          <a className="logo" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} >PrepX</a>
+          <ul className="nl">
             {[["how","How It Works"],["features","Features"],["demo","Demo"],["testi","Reviews"]].map(([id,lbl])=>(
               <li key={id}><a className={active===id?"act":""} onClick={()=>go(id)}>{lbl}</a></li>
             ))}
@@ -321,7 +318,7 @@ export default function LandingPage(){
         <div className="wrap">
           <div className="sh">
             <RV><span className="slb">Process</span></RV>
-            <RV delay={60}><h2 className="st">How InterviewAI Works</h2></RV>
+            <RV delay={60}><h2 className="st">How PrepX Works</h2></RV>
             <RV delay={120}><p className="ss">Four intelligent layers running in real-time to give you the most realistic interview simulation possible.</p></RV>
           </div>
           <div className="steps">
@@ -381,7 +378,7 @@ export default function LandingPage(){
               <div className="mkp">
                 <div className="mkb">
                   <div className="d dr"/><div className="d dy"/><div className="d dg"/>
-                  <span className="mklb">InterviewAI — SDE Mock Session</span>
+                  <span className="mklb">PrepX — SDE Mock Session</span>
                   <span className="rec"><span className="rdot"/>REC</span>
                 </div>
                 <div className="mkbd">
@@ -422,7 +419,7 @@ export default function LandingPage(){
           <div className="sh">
             <RV><span className="slb">Testimonials</span></RV>
             <RV delay={60}><h2 className="st">Students Who Landed the Job</h2></RV>
-            <RV delay={120}><p className="ss">Real stories from users who transformed their interview performance with InterviewAI.</p></RV>
+            <RV delay={120}><p className="ss">Real stories from users who transformed their interview performance with PrepX.</p></RV>
           </div>
           <div className="tg2">
             <TestiCard stars={5} text="After three sessions I could see my filler word count drop from 28 to 6. The emotion feedback was eye-opening — I had no idea I looked so anxious on camera." name="Riya Kapoor" role="SDE at Flipkart" av="a1" initials="RK" delay={40}/>
@@ -448,7 +445,7 @@ export default function LandingPage(){
       <footer>
         <div className="fi">
           <div className="fb">
-            <a className="logo" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})}><span className="ldot"/>InterviewAI</a>
+            <a className="logo" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})} >{String.fromCharCode(128218)}PrepX</a>
             <p className="fb-p">AI mock interviews that analyze voice, face, and answers — giving you the edge in every job hunt.</p>
             <div className="fsc"><a>𝕏</a><a>in</a><a>⬡</a><a>◎</a></div>
           </div>
@@ -457,7 +454,7 @@ export default function LandingPage(){
           <div className="fc"><h4 className="fch">Company</h4><ul>{["About","Blog","Careers","Contact"].map(t=><li key={t}><a className="fcl">{t}</a></li>)}</ul></div>
         </div>
         <div className="fbot">
-          <span>© 2025 InterviewAI. All rights reserved.</span>
+          <span>© 2025 PrepX. All rights reserved.</span>
           <div style={{display:"flex",gap:18,flexWrap:"wrap"}}>
             <a className="fbotl">Privacy Policy</a>
             <a className="fbotl">Terms of Service</a>
@@ -574,9 +571,9 @@ section, nav, footer { position:relative; z-index:1; }
 /* Logo: Jakarta Sans 700 at slightly tighter spacing */
 .logo {
   font-family: var(--head);
-  font-weight: 700;
-  font-size: 1.2rem;
-  letter-spacing: -.025em;
+  font-weight: 800;
+  font-size: 1.28rem;
+  letter-spacing: -.03em;
   text-decoration: none;
   color: var(--txt);
   display: flex;
