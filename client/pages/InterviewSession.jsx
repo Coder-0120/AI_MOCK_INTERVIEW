@@ -194,8 +194,15 @@ export default function Session() {
   /* FETCH QUESTIONS */
   useEffect(() => {
     if (!role) return;
-    axios.post("http://localhost:5000/api/interview/questions", { role })
-      .then((res) => setQuestions(res.data.questions))
+axios.post(
+  "http://localhost:5000/api/interview/questions",
+  { role },
+  {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`
+    }
+  }
+)      .then((res) => setQuestions(res.data.questions))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [role]);
