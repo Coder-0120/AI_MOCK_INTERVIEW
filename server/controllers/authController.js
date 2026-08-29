@@ -3,6 +3,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const InterviewModel = require("../models/Interview");
 const extractResumeText = require("../services/resumeParser");
+const chunkText = require("../services/chunker");
+const ResumeChunk = require("../models/ResumeChunk");
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -65,6 +67,19 @@ const registerUser = async (req, res) => {
         processed: false,
       },
     });
+    // Split resume text into smaller chunks
+const chunks = chunkText(resumeText);
+
+// Save resume chunks for this user
+if (chunks.length > 0) {
+  await ResumeChunk.insertMany(
+    chunks.map((chunk, index) => ({
+      userId: user._id,
+      text: chunk,
+      chunkIndex: index,
+    }))
+  );
+}
 
     // Generate token immediately
     const token = generateToken(user._id);
@@ -80,6 +95,10 @@ const registerUser = async (req, res) => {
         processed: false,
       },
     });
+
+// Mark resume as processed
+user.resume.processed = true;
+await user.save();
 
   } catch (error) {
     res.status(500).json({
