@@ -14,31 +14,68 @@ const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // check user exists
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({ message: "User already exists" });
+    // Resume will come through multer
+    const resume = req.file;
+
+    // Check required fields
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        message: "Name, email and password are required",
+      });
     }
 
-    // hash password
+    // Resume is required during signup
+    if (!resume) {
+      return res.status(400).json({
+        message: "Resume is required during signup",
+      });
+    }
+
+    // Check user exists
+    const userExists = await User.findOne({ email });
+
+    if (userExists) {
+      return res.status(400).json({
+        message: "User already exists",
+      });
+    }
+
+    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // create user
+    // Create user
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
+
+      resume: {
+        fileName: resume.originalname,
+        uploadedAt: new Date(),
+        processed: false,
+      },
     });
 
+    // Generate token immediately
+    const token = generateToken(user._id);
+
+    // Return token so frontend can directly login
     res.status(201).json({
       _id: user._id,
       name: user.name,
       email: user.email,
-      token: generateToken(user._id),
+      token,
+      resume: {
+        fileName: resume.originalname,
+        processed: false,
+      },
     });
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
 
