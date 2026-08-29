@@ -1,4 +1,4 @@
-const pdfParse = require("pdf-parse");
+const { PDFParse } = require("pdf-parse");
 const mammoth = require("mammoth");
 
 const extractResumeText = async (file) => {
@@ -8,9 +8,15 @@ const extractResumeText = async (file) => {
 
   // PDF
   if (file.mimetype === "application/pdf") {
-    const data = await pdfParse(file.buffer);
+    const parser = new PDFParse({
+      data: file.buffer,
+    });
 
-    return data.text.trim();
+    const result = await parser.getText();
+
+    await parser.destroy();
+
+    return result.text.trim();
   }
 
   // DOCX
