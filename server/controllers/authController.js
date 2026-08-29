@@ -1,7 +1,8 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const InterviewModel=require("../models/Interview");
+const InterviewModel = require("../models/Interview");
+const extractResumeText = require("../services/resumeParser");
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -28,6 +29,14 @@ const registerUser = async (req, res) => {
     if (!resume) {
       return res.status(400).json({
         message: "Resume is required during signup",
+      });
+    }
+    // Extract text from resume
+    const resumeText = await extractResumeText(resume);
+
+    if (!resumeText) {
+      return res.status(400).json({
+        message: "Could not extract text from resume",
       });
     }
 
@@ -102,21 +111,21 @@ const loginUser = async (req, res) => {
 };
 
 // to fetch all interview per users 
-const showHistory=async(req,res)=>{
-  try{
+const showHistory = async (req, res) => {
+  try {
     // console.log(req.user);
     // console.log(req.user._id);
-    const history=await InterviewModel.find({userId:req.user._id}).sort({createdAt:-1});
-   if (history.length === 0) {
+    const history = await InterviewModel.find({ userId: req.user._id }).sort({ createdAt: -1 });
+    if (history.length === 0) {
       return res.status(200).json({
         message: "No records found",
         history: []
       });
     }
-    return res.status(201).json({message:"All interview history fetched succesfully..",history:history});
+    return res.status(201).json({ message: "All interview history fetched succesfully..", history: history });
   }
-  catch(error){
-    return res.status(500).json({message:error.message})
+  catch (error) {
+    return res.status(500).json({ message: error.message })
   }
 
 }
@@ -138,4 +147,4 @@ const showProfile = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
-module.exports={registerUser,loginUser,showHistory,showProfile};
+module.exports = { registerUser, loginUser, showHistory, showProfile };
