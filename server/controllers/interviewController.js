@@ -1,11 +1,56 @@
 const model=require("../config/gemini");
 const InterviewModel=require("../models/Interview");
-const generateQuestion=async(req,res)=>{
+const generateEmbedding = require("../services/embeddingService");
+const retrieveResumeContext = require("../services/retriever");
+const generateQuestion = async (req, res) => {
   try {
     const { role } = req.body;
 
-    const prompt = `Generate 2 interview questions for ${role}. 
-    Only give questions line by line.`;
+    if (!role) {
+      return res.status(400).json({
+        error: "Role is required"
+      });
+    }
+
+    // Query used for resume retrieval
+    const query = `${role} interview questions candidate skills projects experience`;
+
+    // Convert query into embedding
+    const queryEmbedding = await generateEmbedding(query);
+
+    // Retrieve relevant chunks from THIS user's resume
+    const relevantChunks = await retrieveResumeContext(
+      req.user._id,
+      queryEmbedding,
+      3
+    );
+
+    // Convert retrieved chunks into context
+    const resumeContext = relevantChunks
+      .map((chunk, index) => {
+        return `Resume Context ${index + 1}:\n${chunk.text}`;
+      })
+      .join("\n\n");
+
+    const prompt = `
+You are an expert technical interviewer.
+
+Candidate Role:
+${role}
+
+Candidate Resume:
+${resumeContext || "No relevant resume information was found."}
+
+Generate exactly 2 interview questions.
+
+IMPORTANT:
+- Make the questions relevant to the candidate's resume.
+- Prefer asking about their actual projects, skills, technologies, and experience.
+- Do not invent experience that is not present in the resume.
+- Mix conceptual and practical/scenario-based questions when appropriate.
+- If the resume contains a project using a technology relevant to the role, ask about that project.
+- Return ONLY the questions, one per line.
+`;
 
     const result = await model.generateContent(prompt);
     const text = result.response.text();
@@ -15,13 +60,19 @@ const generateQuestion=async(req,res)=>{
       .map(q => q.trim())
       .filter(q => q !== "");
 
-    res.json({ questions });
+    res.json({
+      questions,
+      resumeBased: relevantChunks.length > 0
+    });
 
   } catch (err) {
     console.log(err);
-    res.status(500).json({ error: "Error generating questions" });
+
+    res.status(500).json({
+      error: "Error generating questions"
+    });
   }
-}
+};
 
 const generatefeedback=async(req,res)=>{
   try{
