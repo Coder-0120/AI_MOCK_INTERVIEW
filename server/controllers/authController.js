@@ -5,6 +5,7 @@ const InterviewModel = require("../models/Interview");
 const extractResumeText = require("../services/resumeParser");
 const chunkText = require("../services/chunker");
 const ResumeChunk = require("../models/ResumeChunk");
+const generateEmbedding = require("../services/embeddingService");
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -67,18 +68,23 @@ const registerUser = async (req, res) => {
         processed: false,
       },
     });
-    // Split resume text into smaller chunks
-const chunks = chunkText(resumeText);
+  const chunks = chunkText(resumeText);
 
-// Save resume chunks for this user
 if (chunks.length > 0) {
-  await ResumeChunk.insertMany(
-    chunks.map((chunk, index) => ({
+  const resumeChunks = [];
+
+  for (let i = 0; i < chunks.length; i++) {
+    const embedding = await generateEmbedding(chunks[i]);
+
+    resumeChunks.push({
       userId: user._id,
-      text: chunk,
-      chunkIndex: index,
-    }))
-  );
+      text: chunks[i],
+      chunkIndex: i,
+      embedding: embedding
+    });
+  }
+
+  await ResumeChunk.insertMany(resumeChunks);
 }
 
     // Generate token immediately
