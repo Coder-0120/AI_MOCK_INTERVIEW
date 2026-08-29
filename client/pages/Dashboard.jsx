@@ -85,7 +85,17 @@ export default function Dashboard() {
   const [scrolled, setScrolled] = useState(false);
   const [mobOpen, setMobOpen]   = useState(false);
   const [visible, setVisible]   = useState(false);
-    const navLinks = [["dashboard","Dashboard"],["setup","New Interview"],["history","History"],["profile","Profile"]];
+  const token = localStorage.getItem("token");
+  const navLinks = [["dashboard","Dashboard"],["setup","New Interview"],["history","History"],["profile","Profile"]];
+
+  const handleAuthAction = () => {
+    if (token) {
+      localStorage.removeItem("token");
+      navigate("/login");
+    } else {
+      navigate("/register");
+    }
+  };
 
 
   useEffect(()=>{
@@ -125,7 +135,7 @@ export default function Dashboard() {
               </li>
             ))}
           </ul>
-          <button className="ncta" onClick={() => navigate("/setup")}>Start Free →</button>
+          <button className="ncta" onClick={handleAuthAction}>{token ? "Logout →" : "Start Free →"}</button>
           <button className={`ham ${mobOpen?"o":""}`} onClick={() => setMobOpen(!mobOpen)}><span/><span/><span/></button>
         </div>
       </nav>
@@ -135,7 +145,7 @@ export default function Dashboard() {
         {[["dashboard","🏠","Dashboard"],["setup","🎤","New Interview"],["history","📊","History"],["profile","👤","Profile"]].map(([id,e,lbl])=>(
           <a key={id} onClick={()=>go(id)}>{e} {lbl}</a>
         ))}
-        <a className="mcta" onClick={()=>{setMobOpen(false);navigate("/setup");}}>🎤 Start Mock Interview</a>
+        <a className="mcta" onClick={()=>{setMobOpen(false);handleAuthAction();}}>{token ? "🚪 Logout" : "🎤 Start Mock Interview"}</a>
       </div>
 
       {/* FULL-SCREEN CENTER */}

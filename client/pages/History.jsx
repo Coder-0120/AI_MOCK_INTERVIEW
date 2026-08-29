@@ -213,6 +213,15 @@ export default function History() {
 
   const go = (id) => { setMobOpen(false); navigate("/" + id); };
 
+  const handleAuthAction = () => {
+    if (token) {
+      localStorage.removeItem("token");
+      navigate("/login");
+    } else {
+      navigate("/register");
+    }
+  };
+
   return (
     <>
       <style>{CSS}</style>
@@ -230,7 +239,7 @@ export default function History() {
               </li>
             ))}
           </ul>
-          <button className="ncta" onClick={() => navigate("/setup")}>Start Free →</button>
+          <button className="ncta" onClick={handleAuthAction}>{token ? "Logout →" : "Start Free →"}</button>
           <button className={`ham ${mobOpen?"o":""}`} onClick={() => setMobOpen(!mobOpen)}><span/><span/><span/></button>
         </div>
       </nav>
@@ -240,7 +249,7 @@ export default function History() {
         {[["dashboard","🏠","Dashboard"],["setup","🎤","New Interview"],["history","📊","History"],["profile","👤","Profile"]].map(([id,e,lbl])=>(
           <a key={id} onClick={()=>go(id)}>{e} {lbl}</a>
         ))}
-        <a className="mcta" onClick={() => { setMobOpen(false); navigate("/setup"); }}>🎤 Start New Interview</a>
+        <a className="mcta" onClick={() => { setMobOpen(false); handleAuthAction(); }}>{token ? "🚪 Logout" : "🎤 Start New Interview"}</a>
       </div>
 
       {/* PAGE BODY */}

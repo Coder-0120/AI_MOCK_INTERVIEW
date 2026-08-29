@@ -92,6 +92,7 @@ export default function InterviewSetup() {
   const [scrolled, setScrolled] = useState(false);
   const [mobOpen, setMobOpen] = useState(false);
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
   const navLinks = [["dashboard","Dashboard"],["setup","New Interview"],["history","History"],["profile","Profile"]];
 
   useEffect(()=>{ setTimeout(()=>setVisible(true), 80); },[]);
@@ -102,6 +103,15 @@ export default function InterviewSetup() {
   },[]);
 
   const go = id => { setMobOpen(false); navigate("/"+id); };
+
+  const handleAuthAction = () => {
+    if (token) {
+      localStorage.removeItem("token");
+      navigate("/login");
+    } else {
+      navigate("/register");
+    }
+  };
 
   return (
     <>
@@ -122,7 +132,7 @@ export default function InterviewSetup() {
               </li>
             ))}
           </ul>
-          <button className="ncta" onClick={() => navigate("/setup")}>Start Free →</button>
+          <button className="ncta" onClick={handleAuthAction}>{token ? "Logout →" : "Start Free →"}</button>
           <button className={`ham ${mobOpen?"o":""}`} onClick={() => setMobOpen(!mobOpen)}><span/><span/><span/></button>
         </div>
       </nav>
@@ -132,7 +142,7 @@ export default function InterviewSetup() {
         {[["dashboard","🏠","Dashboard"],["setup","🎤","New Interview"],["history","📊","History"],["profile","👤","Profile"]].map(([id,e,lbl])=>(
           <a key={id} onClick={()=>go(id)}>{e} {lbl}</a>
         ))}
-        <a className="mcta" onClick={() => { setMobOpen(false); navigate("/setup"); }}>🎤 Start New Interview</a>
+        <a className="mcta" onClick={() => { setMobOpen(false); handleAuthAction(); }}>{token ? "🚪 Logout" : "🎤 Start New Interview"}</a>
       </div>
 
       {/* STAGE */}

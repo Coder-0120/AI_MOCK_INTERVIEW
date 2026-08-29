@@ -321,6 +321,15 @@ axios.post(
   const progress = questions.length > 0 ? (current / questions.length) * 100 : 0;
   const go = (id) => { setMobOpen(false); navigate("/" + id); };
 
+  const handleAuthAction = () => {
+    if (token) {
+      localStorage.removeItem("token");
+      navigate("/login");
+    } else {
+      navigate("/register");
+    }
+  };
+
   return (
     <>
       <style>{CSS}</style>
@@ -336,7 +345,7 @@ axios.post(
               <li key={id}><a onClick={() => go(id)}>{lbl}</a></li>
             ))}
           </ul>
-          <button className="ncta" onClick={() => navigate("/setup")}>Start Free →</button>
+          <button className="ncta" onClick={handleAuthAction}>{token ? "Logout →" : "Start Free →"}</button>
           <button className={`ham ${mobOpen?"o":""}`} onClick={() => setMobOpen(!mobOpen)}><span/><span/><span/></button>
         </div>
       </nav>
@@ -345,7 +354,7 @@ axios.post(
         {[["dashboard","🏠","Dashboard"],["setup","🎤","New Interview"],["history","📊","History"],["profile","👤","Profile"]].map(([id,e,lbl]) => (
           <a key={id} onClick={() => go(id)}>{e} {lbl}</a>
         ))}
-        <a className="mcta" onClick={() => navigate("/setup")}>🎤 Start Mock Interview</a>
+        <a className="mcta" onClick={handleAuthAction}>{token ? "🚪 Logout" : "🎤 Start Mock Interview"}</a>
       </div>
 
       {/* STAGE */}

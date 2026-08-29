@@ -226,19 +226,14 @@ export default function LandingPage(){
       navigate("/login");       // not logged in
     }
   };
-  const handleLogout=()=>{
-    if(token){
+  const handleAuthAction = () => {
+    if (token) {
       localStorage.removeItem("token");
-      alert("Logged out successfully");
       navigate("/login");
-
+    } else {
+      navigate("/register");
     }
-    else{
-      navigate("/login");
-    }
-
-
-  }
+  };
 
   useEffect(()=>{
     const fn=()=>{
@@ -269,7 +264,7 @@ export default function LandingPage(){
               <li key={id}><a className={active===id?"act":""} onClick={()=>go(id)}>{lbl}</a></li>
             ))}
           </ul>
-          <button className="ncta" onClick={handleLogout}>  {token ? "Logout →" : "Start Free →"}</button>
+          <button className="ncta" onClick={handleAuthAction}>{token ? "Logout →" : "Start Free →"}</button>
           <button className={`ham ${mobOpen?"o":""}`} onClick={()=>setMobOpen(!mobOpen)}><span/><span/><span/></button>
         </div>
       </nav>
@@ -278,7 +273,7 @@ export default function LandingPage(){
         {[["how","🎯","How It Works"],["features","✨","Features"],["demo","🖥️","Demo"],["testi","⭐","Reviews"]].map(([id,e,lbl])=>(
           <a key={id} onClick={()=>go(id)}>{e} {lbl}</a>
         ))}
-        <a className="mcta" onClick={()=>go("cta")}>🎤 Start Free Interview</a>
+        <a className="mcta" onClick={()=>{setMobOpen(false);handleAuthAction();}}>{token ? "🚪 Logout" : "🎤 Start Free"}</a>
       </div>
 
       {/* HERO */}
