@@ -79,6 +79,7 @@ function Cursor() {
 ═══════════════════════════════ */
 const Register = () => {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [resume, setResume] = useState(null);
   const [loading, setLoading] = useState(false);
   const [visible, setVisible] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -93,19 +94,79 @@ const Register = () => {
   },[]);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleResumeChange = (e) => {
+  const file = e.target.files[0];
+
+  if (!file) return;
+
+  const allowedTypes = [
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+  ];
+
+  if (!allowedTypes.includes(file.type)) {
+    alert("Only PDF and DOCX resumes are allowed.");
+    e.target.value = "";
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    alert("Resume must be smaller than 5 MB.");
+    e.target.value = "";
+    return;
+  }
+
+  setResume(file);
+};
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      await axios.post("http://localhost:5000/api/auth/register", form);
-      navigate("/dashboard");
-    } catch (err) {
-      alert(err.response?.data?.message || "Error registering");
-    } finally {
-      setLoading(false);
-    }
-  };
+  e.preventDefault();
+
+  if (!resume) {
+    alert("Please upload your resume.");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const formData = new FormData();
+
+    formData.append("name", form.name);
+    formData.append("email", form.email);
+    formData.append("password", form.password);
+    formData.append("resume", resume);
+
+    const response = await axios.post(
+      "http://localhost:5000/api/auth/register",
+      formData
+    );
+
+    // Save JWT immediately after signup
+    localStorage.setItem("token", response.data.token);
+
+    // Optional: save user information
+    localStorage.setItem(
+      "user",
+      JSON.stringify({
+        _id: response.data._id,
+        name: response.data.name,
+        email: response.data.email
+      })
+    );
+
+    // No second login required
+    navigate("/dashboard");
+
+  } catch (err) {
+    alert(
+      err.response?.data?.message ||
+      "Error registering"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <>
@@ -181,6 +242,28 @@ const Register = () => {
                 required
               />
             </div>
+            <div className="field-group">
+  <label className="field-label">Resume</label>
+
+  <input
+    className="field-input"
+    type="file"
+    name="resume"
+    accept=".pdf,.docx"
+    onChange={handleResumeChange}
+    required
+  />
+
+  <small style={{ color: "var(--muted)", marginTop: "4px" }}>
+    PDF or DOCX • Maximum 5 MB
+  </small>
+
+  {resume && (
+    <small style={{ color: "var(--c)", marginTop: "4px" }}>
+      ✓ {resume.name}
+    </small>
+  )}
+</div>
 
             <button type="submit" className={`submit-btn ${loading?"loading":""}`} disabled={loading}>
               <span className="btn-glow"/>
